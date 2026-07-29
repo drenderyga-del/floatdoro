@@ -268,12 +268,6 @@ struct FloatingWidgetView: View {
                             }
 
                             if !completedTasks.isEmpty {
-                                Text(appText("Готово в этой сессии", "Done in this session"))
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(GlassTheme.secondaryInk)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.top, 5)
-
                                 ForEach(completedTasks) { task in
                                     GlassTaskRow(
                                         task: task,

@@ -289,12 +289,6 @@ struct PopoverView: View {
                         }
 
                         if !completedTasks.isEmpty {
-                            Text(appText("Готово в этой сессии", "Done in this session"))
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(palette.muted)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 8)
-
                             ForEach(completedTasks) { task in
                                 TaskRow(
                                     task: task,
