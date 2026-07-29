@@ -1,0 +1,32 @@
+name: Release Macodoro
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: macos-14
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build release archive
+        run: ./scripts/release_artifact.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" \
+            "outputs/release/Macodoro-${TAG#v}-macos.zip" \
+            "outputs/release/Macodoro-${TAG#v}-macos.zip.sha256" \
+            --title "Macodoro ${TAG#v}" \
+            --generate-notes

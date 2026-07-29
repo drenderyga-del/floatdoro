@@ -1,4 +1,4 @@
-# Pomo
+# Macodoro
 
 A native, local-first Pomodoro timer for the macOS menu bar.
 
@@ -21,7 +21,18 @@ Requires macOS 14 or newer and Xcode Command Line Tools.
 ```sh
 swift test
 ./scripts/package_app.sh
-open outputs/Pomo.app
+open outputs/Macodoro.app
 ```
 
-The packaged application is written to `outputs/Pomo.app`.
+The packaged application is written to `outputs/Macodoro.app`.
+
+## Release
+
+Push a version tag to create a GitHub Release with a ready-to-download application archive:
+
+```sh
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+The release contains `Macodoro-<version>-macos.zip`, which holds `Macodoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
