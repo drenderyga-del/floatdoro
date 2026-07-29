@@ -483,8 +483,13 @@ private struct SegmentedTimeScale: View {
             value: remainingProgress
         )
         .accessibilityElement()
-        .accessibilityLabel("Оставшееся время")
-        .accessibilityValue("\(Int(remainingProgress * 100)) процентов")
+        .accessibilityLabel(appText("Оставшееся время", "Time remaining"))
+        .accessibilityValue(
+            appText(
+                "\(Int(remainingProgress * 100)) процентов",
+                "\(Int(remainingProgress * 100)) percent"
+            )
+        )
     }
 
     private func fillAmount(for index: Int) -> CGFloat {
@@ -558,8 +563,14 @@ private struct GlassTaskRow: View {
         .buttonStyle(GlassPressButtonStyle())
         .accessibilityLabel(
             task.isCompleted
-                ? "Вернуть задачу \(task.title)"
-                : "Завершить задачу \(task.title)"
+                ? appText(
+                    "Вернуть задачу \(task.title)",
+                    "Restore task \(task.title)"
+                )
+                : appText(
+                    "Завершить задачу \(task.title)",
+                    "Complete task \(task.title)"
+                )
         )
     }
 }
