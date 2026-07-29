@@ -3,6 +3,12 @@ import Combine
 import CoreImage
 import SwiftUI
 
+private extension Notification.Name {
+    static let floatdoroShowMainPanel = Notification.Name(
+        "io.github.drenderyga-del.floatdoro.show-main-panel"
+    )
+}
+
 @main
 enum PomoMain {
     @MainActor
@@ -11,12 +17,41 @@ enum PomoMain {
     @MainActor
     static func main() {
         let previewMode = CommandLine.arguments.contains("--preview")
+        if !previewMode, activateRunningInstanceIfNeeded() {
+            return
+        }
+
         let application = NSApplication.shared
         let delegate = PomoAppDelegate(previewMode: previewMode)
         retainedDelegate = delegate
         application.delegate = delegate
         application.setActivationPolicy(previewMode ? .regular : .accessory)
         application.run()
+    }
+
+    @MainActor
+    private static func activateRunningInstanceIfNeeded() -> Bool {
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return false
+        }
+
+        let currentProcessIdentifier = ProcessInfo.processInfo.processIdentifier
+        guard let runningApplication = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first(where: {
+                $0.processIdentifier != currentProcessIdentifier &&
+                    !$0.isTerminated
+            })
+        else {
+            return false
+        }
+
+        DistributedNotificationCenter.default().post(
+            name: .floatdoroShowMainPanel,
+            object: bundleIdentifier
+        )
+        runningApplication.activate(options: [])
+        return true
     }
 }
 
@@ -44,6 +79,12 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         if previewMode {
             showPreviewWindow()
         } else {
+            DistributedNotificationCenter.default().addObserver(
+                self,
+                selector: #selector(showMainPanelFromExternalLaunch),
+                name: .floatdoroShowMainPanel,
+                object: nil
+            )
             configureMenuBar()
             let shouldShowFocusWindow = store.isRunning
             store.setFloatingVisible(shouldShowFocusWindow)
@@ -61,6 +102,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        DistributedNotificationCenter.default().removeObserver(self)
         store.persistNow()
     }
 
@@ -83,7 +125,8 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         guard let button = item.button else { return }
 
         button.target = self
-        button.action = #selector(togglePopover)
+        button.action = #selector(handleStatusItemClick(_:))
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.toolTip = appText("Floatdoro — открыть таймер", "Floatdoro — open timer")
@@ -122,7 +165,12 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc
-    private func togglePopover() {
+    private func handleStatusItemClick(_ sender: NSStatusBarButton) {
+        if NSApp.currentEvent?.type == .rightMouseUp {
+            showStatusMenu(relativeTo: sender)
+            return
+        }
+
         guard let popover else { return }
 
         if popover.isShown {
@@ -130,6 +178,64 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             showPopover()
         }
+    }
+
+    private func showStatusMenu(relativeTo button: NSStatusBarButton) {
+        let menu = NSMenu()
+
+        let openItem = NSMenuItem(
+            title: appText("Открыть Floatdoro", "Open Floatdoro"),
+            action: #selector(openFromStatusMenu),
+            keyEquivalent: ""
+        )
+        openItem.target = self
+        menu.addItem(openItem)
+
+        let floatingItem = NSMenuItem(
+            title: store.isFloatingVisible
+                ? appText("Скрыть плавающее окно", "Hide floating window")
+                : appText("Показать плавающее окно", "Show floating window"),
+            action: #selector(toggleFloatingFromStatusMenu),
+            keyEquivalent: ""
+        )
+        floatingItem.target = self
+        menu.addItem(floatingItem)
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(
+            title: appText("Выйти из Floatdoro", "Quit Floatdoro"),
+            action: #selector(quitApplication),
+            keyEquivalent: "q"
+        )
+        quitItem.target = self
+        menu.addItem(quitItem)
+
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 0, y: button.bounds.height + 2),
+            in: button
+        )
+    }
+
+    @objc
+    private func openFromStatusMenu() {
+        showPopover()
+    }
+
+    @objc
+    private func toggleFloatingFromStatusMenu() {
+        store.setFloatingVisible(!store.isFloatingVisible)
+    }
+
+    @objc
+    private func quitApplication() {
+        NSApp.terminate(nil)
+    }
+
+    @objc
+    private func showMainPanelFromExternalLaunch() {
+        showPopover()
     }
 
     private func showPopover() {

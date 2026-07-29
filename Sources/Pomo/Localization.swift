@@ -1,8 +1,17 @@
 import Foundation
 
 enum AppLanguage {
+    private static let supportedLanguages = ["en", "ru"]
+
+    static var identifier: String {
+        Bundle.preferredLocalizations(
+            from: supportedLanguages,
+            forPreferences: Locale.preferredLanguages
+        ).first ?? "en"
+    }
+
     static var isRussian: Bool {
-        Locale.autoupdatingCurrent.language.languageCode?.identifier == "ru"
+        identifier == "ru"
     }
 
     static var locale: Locale {

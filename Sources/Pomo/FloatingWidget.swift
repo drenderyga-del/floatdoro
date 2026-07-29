@@ -1,24 +1,6 @@
 import AppKit
 import SwiftUI
 
-enum GlassTheme {
-    static let accent = Color(
-        nsColor: NSColor(
-            srgbRed: 0.18,
-            green: 0.66,
-            blue: 0.30,
-            alpha: 1
-        )
-    )
-    static let ink = Color.primary.opacity(0.84)
-    static let secondaryInk = Color.primary.opacity(0.54)
-    static let faintInk = Color.primary.opacity(0.28)
-    static let glass = Color.white.opacity(0.10)
-    static let strongGlass = Color.white.opacity(0.18)
-    static let quietGlass = Color.white.opacity(0.05)
-    static let edge = Color.white.opacity(0.32)
-}
-
 struct BehindWindowGlass: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
@@ -40,6 +22,8 @@ struct BehindWindowGlass: NSViewRepresentable {
 
 struct FloatingWidgetView: View {
     @ObservedObject var store: TimerStore
+
+    private var palette: PomoPalette { store.theme.palette }
 
     private var unfinishedTasks: [FocusTask] {
         store.currentSessionTasks.filter { !$0.isCompleted }
@@ -73,8 +57,12 @@ struct FloatingWidgetView: View {
             )
 
             ZStack {
-                BehindWindowGlass()
-                Color.white.opacity(0.02)
+                if store.theme == .light {
+                    palette.canvas
+                } else {
+                    BehindWindowGlass()
+                    Color.black.opacity(0.20)
+                }
 
                 VStack(spacing: 0) {
                     header(compact: geometry.size.width < 430)
@@ -86,13 +74,14 @@ struct FloatingWidgetView: View {
             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(GlassTheme.edge, lineWidth: 1)
+                    .stroke(palette.border, lineWidth: 1)
             }
             .overlay(alignment: .bottomTrailing) {
                 resizeAffordance
             }
             .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
+        .environment(\.pomoPalette, palette)
         .preferredColorScheme(store.theme.colorScheme)
     }
 
@@ -124,12 +113,12 @@ struct FloatingWidgetView: View {
 
             HStack(spacing: 7) {
                 Circle()
-                    .fill(GlassTheme.accent)
+                    .fill(palette.tomato)
                     .frame(width: 9, height: 9)
 
                 Text(store.phaseStatusLabel)
                     .font(.system(size: compact ? 13 : 14, weight: .semibold))
-                    .foregroundStyle(GlassTheme.accent)
+                    .foregroundStyle(palette.tomato)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(store.phaseStatusAccessibilityLabel)
@@ -185,7 +174,7 @@ struct FloatingWidgetView: View {
                 )
                 .monospacedDigit()
                 .tracking(-1.7)
-                .foregroundStyle(GlassTheme.ink)
+                .foregroundStyle(palette.ink)
                 .contentTransition(.numericText(countsDown: true))
                 .minimumScaleFactor(0.72)
                 .accessibilityLabel(
@@ -195,7 +184,7 @@ struct FloatingWidgetView: View {
             Text(appText("из", "of") + " \(timerDisplay(seconds: store.durationSeconds))")
                 .font(.system(size: compact ? 14 : 17, weight: .medium))
                 .monospacedDigit()
-                .foregroundStyle(GlassTheme.secondaryInk)
+                .foregroundStyle(palette.muted)
 
             SegmentedTimeScale(
                 remainingProgress: remainingProgress,
@@ -214,7 +203,7 @@ struct FloatingWidgetView: View {
             }
             .font(.system(size: compact ? 10 : 11, weight: .medium))
             .monospacedDigit()
-            .foregroundStyle(GlassTheme.secondaryInk)
+            .foregroundStyle(palette.muted)
             .frame(maxWidth: 380)
         }
         .frame(maxWidth: .infinity)
@@ -231,13 +220,13 @@ struct FloatingWidgetView: View {
                 HStack {
                     Text(appText("Задачи", "Tasks"))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(GlassTheme.secondaryInk)
+                        .foregroundStyle(palette.muted)
 
                     Spacer()
 
                     Text(appText("\(unfinishedTasks.count) осталось", "\(unfinishedTasks.count) left"))
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(GlassTheme.secondaryInk)
+                        .foregroundStyle(palette.muted)
                 }
 
                 if unfinishedTasks.isEmpty {
@@ -286,7 +275,7 @@ struct FloatingWidgetView: View {
             } else {
                 Text(appText("Текущая задача", "Current task"))
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(GlassTheme.secondaryInk)
+                    .foregroundStyle(palette.muted)
 
                 if let task = store.activeTask {
                     GlassTaskRow(
@@ -304,7 +293,7 @@ struct FloatingWidgetView: View {
                 if showsNext, let nextTask {
                     Text(appText("Далее", "Next"))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(GlassTheme.secondaryInk)
+                        .foregroundStyle(palette.muted)
                         .padding(.top, 1)
 
                     GlassTaskRow(
@@ -322,23 +311,23 @@ struct FloatingWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(GlassTheme.glass)
+                .fill(palette.raised.opacity(0.72))
         }
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(GlassTheme.edge, lineWidth: 1)
+                .stroke(palette.border, lineWidth: 1)
         }
     }
 
     private var emptyTaskRow: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(GlassTheme.accent)
+                .fill(palette.tomato)
                 .frame(width: 9, height: 9)
 
             Text(store.activeTaskTitle)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(GlassTheme.ink)
+                .foregroundStyle(palette.ink)
                 .lineLimit(2)
 
             Spacer(minLength: 0)
@@ -347,7 +336,7 @@ struct FloatingWidgetView: View {
         .padding(.vertical, 10)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(GlassTheme.strongGlass)
+                .fill(palette.raised.opacity(0.92))
         }
     }
 
@@ -405,7 +394,7 @@ struct FloatingWidgetView: View {
             }
         }
         .font(.system(size: 11, weight: .medium))
-        .foregroundStyle(GlassTheme.secondaryInk)
+        .foregroundStyle(palette.muted)
         .padding(.horizontal, 7)
     }
 
@@ -423,15 +412,15 @@ struct FloatingWidgetView: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(GlassTheme.ink)
+                .foregroundStyle(palette.ink)
                 .frame(width: 34, height: 34)
                 .background {
                     Circle()
-                        .fill(GlassTheme.glass)
+                        .fill(palette.raised.opacity(0.72))
                 }
                 .overlay {
                     Circle()
-                        .stroke(GlassTheme.edge, lineWidth: 1)
+                        .stroke(palette.border, lineWidth: 1)
                 }
                 .contentShape(Circle())
         }
@@ -443,7 +432,7 @@ struct FloatingWidgetView: View {
     private var resizeAffordance: some View {
         Image(systemName: "line.diagonal.arrow")
             .font(.system(size: 9, weight: .semibold))
-            .foregroundStyle(GlassTheme.faintInk)
+            .foregroundStyle(palette.muted.opacity(0.55))
             .rotationEffect(.degrees(90))
             .padding(.trailing, 8)
             .padding(.bottom, 7)
@@ -456,6 +445,7 @@ private struct SegmentedTimeScale: View {
     let segmentCount: Int
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.pomoPalette) private var palette
 
     var body: some View {
         HStack(spacing: 5) {
@@ -465,10 +455,10 @@ private struct SegmentedTimeScale: View {
 
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(GlassTheme.faintInk.opacity(0.24))
+                            .fill(palette.raised)
 
                         Capsule()
-                            .fill(GlassTheme.accent)
+                            .fill(palette.tomato)
                             .frame(
                                 width: geometry.size.width * fill
                             )
@@ -483,8 +473,13 @@ private struct SegmentedTimeScale: View {
             value: remainingProgress
         )
         .accessibilityElement()
-        .accessibilityLabel("Оставшееся время")
-        .accessibilityValue("\(Int(remainingProgress * 100)) процентов")
+        .accessibilityLabel(appText("Оставшееся время", "Time remaining"))
+        .accessibilityValue(
+            appText(
+                "\(Int(remainingProgress * 100)) процентов",
+                "\(Int(remainingProgress * 100)) percent"
+            )
+        )
     }
 
     private func fillAmount(for index: Int) -> CGFloat {
@@ -500,6 +495,7 @@ private struct GlassTaskRow: View {
     let isActive: Bool
     let isQuiet: Bool
     let action: () -> Void
+    @Environment(\.pomoPalette) private var palette
 
     var body: some View {
         Button(action: action) {
@@ -507,10 +503,10 @@ private struct GlassTaskRow: View {
                 Circle()
                     .fill(
                         task.isCompleted
-                            ? GlassTheme.faintInk
+                            ? palette.muted.opacity(0.55)
                             : (isActive
-                                ? GlassTheme.accent
-                                : GlassTheme.faintInk)
+                                ? palette.tomato
+                                : palette.muted.opacity(0.55))
                     )
                     .frame(width: 9, height: 9)
 
@@ -523,12 +519,12 @@ private struct GlassTaskRow: View {
                     )
                     .foregroundStyle(
                         task.isCompleted || isQuiet
-                            ? GlassTheme.secondaryInk
-                            : GlassTheme.ink
+                            ? palette.muted
+                            : palette.ink
                     )
                     .strikethrough(
                         task.isCompleted,
-                        color: GlassTheme.secondaryInk
+                        color: palette.muted
                     )
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -539,7 +535,7 @@ private struct GlassTaskRow: View {
                         : "list.bullet"
                 )
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(GlassTheme.secondaryInk)
+                .foregroundStyle(palette.muted)
             }
             .padding(.horizontal, 11)
             .padding(.vertical, 10)
@@ -547,8 +543,8 @@ private struct GlassTaskRow: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(
                         isActive
-                            ? GlassTheme.strongGlass
-                            : GlassTheme.quietGlass
+                            ? palette.raised.opacity(0.92)
+                            : palette.raised.opacity(0.42)
                     )
             }
             .contentShape(
@@ -558,8 +554,14 @@ private struct GlassTaskRow: View {
         .buttonStyle(GlassPressButtonStyle())
         .accessibilityLabel(
             task.isCompleted
-                ? "Вернуть задачу \(task.title)"
-                : "Завершить задачу \(task.title)"
+                ? appText(
+                    "Вернуть задачу \(task.title)",
+                    "Restore task \(task.title)"
+                )
+                : appText(
+                    "Завершить задачу \(task.title)",
+                    "Complete task \(task.title)"
+                )
         )
     }
 }
@@ -570,6 +572,7 @@ struct GlassActionButton: View {
     let accessibilityLabel: String
     let isEnabled: Bool
     let action: () -> Void
+    @Environment(\.pomoPalette) private var palette
 
     var body: some View {
         Button(action: action) {
@@ -582,15 +585,15 @@ struct GlassActionButton: View {
                         .font(.system(size: 13, weight: .semibold))
                 }
             }
-            .foregroundStyle(GlassTheme.ink)
+            .foregroundStyle(palette.ink)
             .frame(maxWidth: .infinity, minHeight: 42)
             .background {
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(GlassTheme.glass)
+                    .fill(palette.raised.opacity(0.72))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(GlassTheme.edge, lineWidth: 1)
+                    .stroke(palette.border, lineWidth: 1)
             }
             .contentShape(
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
@@ -644,7 +647,9 @@ final class FloatingPanelController {
         if visible {
             show()
         } else {
-            panel?.orderOut(nil)
+            if panel?.isVisible == true {
+                panel?.orderOut(nil)
+            }
         }
     }
 
@@ -652,6 +657,7 @@ final class FloatingPanelController {
         if panel == nil {
             panel = makePanel()
         }
+        guard panel?.isVisible != true else { return }
         panel?.orderFrontRegardless()
         panel?.makeFirstResponder(nil)
     }
