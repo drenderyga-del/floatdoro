@@ -49,6 +49,10 @@ struct FloatingWidgetView: View {
         unfinishedTasks.dropFirst().first
     }
 
+    private var queuedTasks: [FocusTask] {
+        Array(unfinishedTasks.dropFirst())
+    }
+
     private var remainingProgress: Double {
         max(0, min(1, 1 - store.progress))
     }
@@ -232,16 +236,27 @@ struct FloatingWidgetView: View {
                         .foregroundStyle(GlassTheme.secondaryInk)
                 }
 
-                if store.tasks.isEmpty {
+                if unfinishedTasks.isEmpty {
                     emptyTaskRow
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 6) {
-                            ForEach(store.tasks) { task in
+                            if let activeTask = store.activeTask {
+                                GlassTaskRow(
+                                    task: activeTask,
+                                    isActive: true,
+                                    isQuiet: false,
+                                    action: {
+                                        store.completeCurrentTask()
+                                    }
+                                )
+                            }
+
+                            ForEach(queuedTasks) { task in
                                 GlassTaskRow(
                                     task: task,
-                                    isActive: task.id == store.activeTask?.id,
-                                    isQuiet: task.isCompleted,
+                                    isActive: false,
+                                    isQuiet: false,
                                     action: {
                                         store.toggleTask(id: task.id)
                                     }

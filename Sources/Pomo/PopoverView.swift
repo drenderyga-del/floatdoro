@@ -269,29 +269,20 @@ struct PopoverView: View {
                         .foregroundStyle(palette.muted)
                 }
                 Spacer()
-                if store.tasks.contains(where: \.isCompleted) {
-                    Button(appText("Убрать готовые", "Clear completed")) {
-                        store.clearCompletedTasks()
-                    }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(palette.muted)
-                        .pomoHelp("Удалить все выполненные задачи")
-                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
             .padding(.bottom, 8)
 
-            if store.tasks.isEmpty {
+            if queuedTasks.isEmpty {
                 emptyTasks
             } else {
                 ScrollView {
                     LazyVStack(spacing: 6) {
-                        ForEach(store.tasks) { task in
+                        ForEach(queuedTasks) { task in
                             TaskRow(
                                 task: task,
-                                isActive: task.id == store.activeTask?.id,
+                                isActive: false,
                                 toggle: { store.toggleTask(id: task.id) },
                                 delete: { store.deleteTask(id: task.id) }
                             )
@@ -311,7 +302,7 @@ struct PopoverView: View {
             Image(systemName: "checklist")
                 .font(.system(size: 21, weight: .medium))
                 .foregroundStyle(palette.tomato)
-            Text(appText("Добавьте задачу выше — она появится в окне таймера.", "Add a task above — it will appear in the timer window."))
+            Text(appText("Следующих задач пока нет. Добавьте одну выше.", "There are no next tasks yet. Add one above."))
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(palette.muted)
                 .multilineTextAlignment(.center)
@@ -540,14 +531,21 @@ struct PopoverView: View {
     }
 
     private var taskSummary: String {
-        let remaining = store.tasks.filter { !$0.isCompleted }.count
-        if store.tasks.isEmpty {
-            return appText("Список пока пуст", "The list is empty")
+        let completed = store.tasks.filter(\.isCompleted).count
+        if queuedTasks.isEmpty {
+            return completed == 0
+                ? appText("Следующих задач нет", "No next tasks")
+                : appText("Готовые — в истории", "Completed tasks are in history")
         }
         return appText(
-            "\(remaining) осталось · \(store.tasks.count - remaining) готово",
-            "\(remaining) left · \(store.tasks.count - remaining) complete"
+            "\(queuedTasks.count) в очереди",
+            "\(queuedTasks.count) in queue"
         )
+    }
+
+    private var queuedTasks: [FocusTask] {
+        let unfinishedTasks = store.tasks.filter { !$0.isCompleted }
+        return Array(unfinishedTasks.dropFirst())
     }
 
     private func settingsSectionTitle(_ title: String, detail: String) -> some View {
