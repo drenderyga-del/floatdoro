@@ -160,8 +160,8 @@ final class TimerStore: ObservableObject {
             return appText("Можно выдохнуть", "Take a breather")
         }
         return activeTask?.title ?? appText(
-            "Добавь задачу для \\(resolvedWorkStatusLabel.lowercased())",
-            "Add a task for \\(resolvedWorkStatusLabel.lowercased())"
+            "Добавь задачу для \(resolvedWorkStatusLabel.lowercased())",
+            "Add a task for \(resolvedWorkStatusLabel.lowercased())"
         )
     }
 
