@@ -86,8 +86,8 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         button.action = #selector(togglePopover)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
-        button.toolTip = appText("Pomo — открыть таймер", "Pomo — open timer")
-        button.setAccessibilityLabel(appText("Pomo, таймер \(store.displayTime)", "Pomo, timer \(store.displayTime)"))
+        button.toolTip = appText("Macodoro — открыть таймер", "Macodoro — open timer")
+        button.setAccessibilityLabel(appText("Macodoro, таймер \(store.displayTime)", "Macodoro, timer \(store.displayTime)"))
         configureStatusItemBackdrop(button)
 
         statusItem = item
@@ -180,7 +180,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
             .withAlphaComponent(0.10)
             .cgColor
         button.toolTip = "\(store.phaseStatusLabel): \(store.displayTime) — \(store.activeTaskTitle)"
-        button.setAccessibilityLabel("Pomo. \(store.phaseStatusAccessibilityLabel). \(timerAccessibilityLabel(seconds: store.remainingSeconds))")
+        button.setAccessibilityLabel("Macodoro. \(store.phaseStatusAccessibilityLabel). \(timerAccessibilityLabel(seconds: store.remainingSeconds))")
     }
 
     private func showPreviewWindow() {
@@ -190,7 +190,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         )
         let controller = NSHostingController(rootView: content)
         let window = NSWindow(contentViewController: controller)
-        window.title = "Pomo Preview"
+        window.title = "Macodoro Preview"
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.setContentSize(NSSize(width: 420, height: 640))
         window.center()
