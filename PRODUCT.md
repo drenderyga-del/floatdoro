@@ -14,7 +14,7 @@ The primary user works on a Mac for long stretches and wants focus state to rema
 
 ## Product Purpose
 
-Pomo is a local-first menu-bar Pomodoro timer with a persistent optional floating pill. It combines a highly visible countdown with a lightweight task queue so the user can stay in flow, mark work complete, and move immediately to the next task.
+Floatdoro is a local-first menu-bar Pomodoro timer with a persistent optional floating pill. It combines a highly visible countdown with a lightweight task queue so the user can stay in flow, mark work complete, and move immediately to the next task.
 
 Success means the current countdown and task are readable in under a second, starting a session takes one click, and the timer remains correct through sleep, relaunch, and switching applications.
 

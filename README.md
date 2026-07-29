@@ -1,6 +1,8 @@
-# Macodoro
+# Floatdoro
 
-A native, local-first Pomodoro timer for the macOS menu bar.
+![Floatdoro](assets/floatdoro-github-cover.png)
+
+A native, local-first Pomodoro timer that stays visible above your work.
 
 ## Features
 
@@ -21,10 +23,22 @@ Requires macOS 14 or newer and Xcode Command Line Tools.
 ```sh
 swift test
 ./scripts/package_app.sh
-open outputs/Macodoro.app
+open outputs/Floatdoro.app
 ```
 
-The packaged application is written to `outputs/Macodoro.app`.
+The packaged application is written to `outputs/Floatdoro.app`.
+
+## TestFlight
+
+Generate the Xcode project, archive the Mac App Store build, and upload it to
+App Store Connect:
+
+```sh
+./scripts/upload_testflight.sh 1.0.0 1
+```
+
+The Store build uses App Sandbox, automatic signing, and the
+`io.github.drenderyga-del.floatdoro` bundle identifier.
 
 ## Release
 
@@ -35,7 +49,7 @@ git tag v1.0.1
 git push origin v1.0.1
 ```
 
-The release contains `Macodoro-<version>-macos.zip`, which holds `Macodoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
+The release contains `Floatdoro-<version>-macos.zip`, which holds `Floatdoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
 
 Published builds are signed with a Developer ID certificate, notarized by Apple, and
 have the notarization ticket stapled to the application bundle.

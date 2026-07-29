@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR=${0:A:h}
 PROJECT_DIR=${SCRIPT_DIR:h}
-APP_DIR="$PROJECT_DIR/outputs/Macodoro.app"
+APP_DIR="$PROJECT_DIR/outputs/Floatdoro.app"
 
 : "${APPLE_API_KEY_ID:?APPLE_API_KEY_ID is required}"
 : "${APPLE_API_ISSUER_ID:?APPLE_API_ISSUER_ID is required}"
@@ -20,9 +20,9 @@ if [[ ! -f "$APPLE_API_PRIVATE_KEY_PATH" ]]; then
     exit 1
 fi
 
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/macodoro-notarize.XXXXXX")
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/floatdoro-notarize.XXXXXX")
 trap 'rm -rf "$TEMP_DIR"' EXIT
-SUBMISSION_ZIP="$TEMP_DIR/Macodoro.zip"
+SUBMISSION_ZIP="$TEMP_DIR/Floatdoro.zip"
 
 ditto -c -k --keepParent --norsrc --noextattr --noqtn --noacl \
     "$APP_DIR" \
