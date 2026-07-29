@@ -18,7 +18,11 @@ if [[ ! "$VERSION" =~ ^[A-Za-z0-9._-]+$ ]]; then
     exit 1
 fi
 
-"$SCRIPT_DIR/package_app.sh"
+"$SCRIPT_DIR/package_app.sh" "$VERSION"
+
+if [[ "${NOTARIZE_APP:-0}" == "1" ]]; then
+    "$SCRIPT_DIR/notarize_app.sh"
+fi
 
 mkdir -p "$ARTIFACTS_DIR"
 ZIP_PATH="$ARTIFACTS_DIR/Macodoro-$VERSION-macos.zip"
