@@ -340,6 +340,8 @@ final class TimerStore: ObservableObject {
                     completedAt: completedAt
                 )
             )
+            requestNotificationPermissionIfNeeded()
+            sendTaskCompletionNotification(for: tasks[index].title)
         } else {
             tasks[index].completedAt = nil
             if let historyIndex = taskHistory.lastIndex(
@@ -513,6 +515,29 @@ final class TimerStore: ObservableObject {
 
         let request = UNNotificationRequest(
             identifier: "pomo.\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func sendTaskCompletionNotification(for title: String) {
+        guard Bundle.main.bundleURL.pathExtension == "app" else { return }
+        let content = UNMutableNotificationContent()
+        content.title = appText("Задача готова", "Task complete")
+        content.subtitle = title
+        content.body = activeTask.map {
+            appText("Следующая: \($0.title)", "Next: \($0.title)")
+        } ?? appText(
+            "Все задачи этой сессии завершены.",
+            "All tasks in this session are complete."
+        )
+        if soundEnabled {
+            content.sound = .default
+        }
+
+        let request = UNNotificationRequest(
+            identifier: "pomo.task.\(UUID().uuidString)",
             content: content,
             trigger: nil
         )
