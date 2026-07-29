@@ -504,24 +504,40 @@ struct PopoverView: View {
                 Divider()
                     .overlay(palette.border)
 
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(appText("Завершённых сессий", "Completed sessions"))
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(palette.muted)
-                        Text("\(store.completedSessions)")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(palette.ink)
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 18) {
+                        Link(
+                            appText("Конфиденциальность", "Privacy"),
+                            destination: URL(string: "https://drenderyga-del.github.io/floatdoro/privacy.html")!
+                        )
+                        Link(
+                            appText("Поддержка", "Support"),
+                            destination: URL(string: "https://drenderyga-del.github.io/floatdoro/support.html")!
+                        )
                     }
-                    Spacer()
-                    Button(appText("Выйти из Floatdoro", "Quit Floatdoro"), action: onQuit)
-                        .buttonStyle(.plain)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(palette.tomato)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 9)
-                        .background(Capsule().fill(palette.focusWash))
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(palette.muted)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(appText("Завершённых сессий", "Completed sessions"))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(palette.muted)
+                            Text("\(store.completedSessions)")
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(palette.ink)
+                        }
+                        Spacer()
+                        Button(appText("Выйти из Floatdoro", "Quit Floatdoro"), action: onQuit)
+                            .buttonStyle(.plain)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(palette.tomato)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 9)
+                            .background(Capsule().fill(palette.focusWash))
+                    }
                 }
             }
             .padding(.horizontal, 20)

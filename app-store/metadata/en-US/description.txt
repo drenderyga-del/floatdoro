@@ -1,0 +1,28 @@
+Floatdoro is a focused Pomodoro timer for Mac that stays visible while you work.
+
+Keep a clean countdown above your other windows, or control everything from the menu bar. Floatdoro is designed to remain useful without becoming another app you need to manage.
+
+STAY IN THE FLOW
+
+• Keep the floating timer above every workspace
+• Resize it from a compact reminder to a task-focused panel
+• Start, pause, reset, or skip an interval in one click
+• See the current task without changing windows
+
+PLAN THE NEXT STEP
+
+• Add a lightweight queue of work tasks
+• Complete the current task and move automatically to the next
+• Review completed tasks and focus sessions in weekly history
+
+MAKE IT YOURS
+
+• Use 25/5, 50/10, and 90/20 presets
+• Set custom focus and break durations
+• Rename work and rest modes
+• Choose a light or dark appearance
+• Enable completion sounds and launch at login
+
+PRIVATE BY DESIGN
+
+Floatdoro has no account, analytics, advertising, or tracking. Your timer state, tasks, preferences, and focus history remain on your Mac.
