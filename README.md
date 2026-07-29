@@ -31,8 +31,15 @@ The packaged application is written to `outputs/Macodoro.app`.
 Push a version tag to create a GitHub Release with a ready-to-download application archive:
 
 ```sh
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 The release contains `Macodoro-<version>-macos.zip`, which holds `Macodoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
+
+## Compatibility
+
+- macOS 14 Sonoma or newer
+- Apple Silicon Macs (M1 or newer)
+
+The release is built as an arm64 application. Intel Mac support is not included yet.

@@ -11,11 +11,14 @@ permissions:
 jobs:
   release:
     name: Build and publish
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Show Swift version
+        run: swift --version
 
       - name: Build release archive
         run: ./scripts/release_artifact.sh "${GITHUB_REF_NAME#v}"
@@ -25,8 +28,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
+          NOTES=$'## Compatibility\n\n- macOS 14 Sonoma or newer\n- Apple Silicon Macs (M1 or newer)\n\nDownload the ZIP, unpack `Macodoro.app`, and move it to Applications.'
           gh release create "$TAG" \
             "outputs/release/Macodoro-${TAG#v}-macos.zip" \
             "outputs/release/Macodoro-${TAG#v}-macos.zip.sha256" \
             --title "Macodoro ${TAG#v}" \
+            --notes "$NOTES" \
             --generate-notes
