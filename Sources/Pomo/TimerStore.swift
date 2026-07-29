@@ -27,6 +27,7 @@ final class TimerStore: ObservableObject {
     @Published private(set) var breakMinutes: Int
     @Published private(set) var workStatusLabel: String
     @Published private(set) var restStatusLabel: String
+    @Published private(set) var currentWorkSessionID: UUID
 
     private let defaults: UserDefaults
     private let persistenceKey = "pomo.state.v1"
@@ -44,7 +45,15 @@ final class TimerStore: ObservableObject {
             let data = defaults.data(forKey: persistenceKey),
             let snapshot = try? JSONDecoder().decode(PersistedPomoState.self, from: data)
         {
-            tasks = snapshot.tasks
+            let restoredWorkSessionID = snapshot.currentWorkSessionID ?? UUID()
+            currentWorkSessionID = restoredWorkSessionID
+            tasks = snapshot.tasks.map { task in
+                var task = task
+                if task.sessionID == nil {
+                    task.sessionID = restoredWorkSessionID
+                }
+                return task
+            }
             phase = snapshot.phase
             isRunning = snapshot.isRunning
             endDate = snapshot.endDate
@@ -92,6 +101,7 @@ final class TimerStore: ObservableObject {
             activeFocusPlannedSeconds = nil
             workStatusLabel = ""
             restStatusLabel = ""
+            currentWorkSessionID = UUID()
         }
 
         launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
@@ -152,7 +162,11 @@ final class TimerStore: ObservableObject {
     }
 
     var activeTask: FocusTask? {
-        tasks.first(where: { !$0.isCompleted })
+        currentSessionTasks.first(where: { !$0.isCompleted })
+    }
+
+    var currentSessionTasks: [FocusTask] {
+        tasks.filter { $0.sessionID == currentWorkSessionID }
     }
 
     var activeTaskTitle: String {
@@ -269,6 +283,7 @@ final class TimerStore: ObservableObject {
     func skipToNextPhase() {
         if phase == .focus {
             clearActiveFocusSession()
+            beginNextWorkSession()
         }
         phase = phase == .focus ? .breakTime : .focus
         isRunning = false
@@ -308,7 +323,7 @@ final class TimerStore: ObservableObject {
     func addTask(title rawTitle: String) {
         let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
-        tasks.append(FocusTask(title: title))
+        tasks.append(FocusTask(title: title, sessionID: currentWorkSessionID))
         persist()
     }
 
@@ -423,6 +438,9 @@ final class TimerStore: ObservableObject {
         isRunning = false
         endDate = nil
         phase = completedPhase == .focus ? .breakTime : .focus
+        if completedPhase == .focus {
+            beginNextWorkSession()
+        }
         pausedSeconds = durationSeconds
         now = Date()
         completionPulse += 1
@@ -461,6 +479,10 @@ final class TimerStore: ObservableObject {
         activeFocusTaskID = nil
         activeFocusTaskTitle = nil
         activeFocusPlannedSeconds = nil
+    }
+
+    private func beginNextWorkSession() {
+        currentWorkSessionID = UUID()
     }
 
     private func requestNotificationPermissionIfNeeded() {
@@ -519,6 +541,7 @@ final class TimerStore: ObservableObject {
             activeFocusPlannedSeconds: activeFocusPlannedSeconds
             ,workStatusLabel: workStatusLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : workStatusLabel
             ,restStatusLabel: restStatusLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : restStatusLabel
+            ,currentWorkSessionID: currentWorkSessionID
         )
 
         guard let data = try? JSONEncoder().encode(snapshot) else { return }

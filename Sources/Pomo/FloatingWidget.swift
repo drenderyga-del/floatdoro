@@ -42,7 +42,7 @@ struct FloatingWidgetView: View {
     @ObservedObject var store: TimerStore
 
     private var unfinishedTasks: [FocusTask] {
-        store.tasks.filter { !$0.isCompleted }
+        store.currentSessionTasks.filter { !$0.isCompleted }
     }
 
     private var nextTask: FocusTask? {
@@ -53,12 +53,16 @@ struct FloatingWidgetView: View {
         Array(unfinishedTasks.dropFirst())
     }
 
+    private var completedTasks: [FocusTask] {
+        store.currentSessionTasks.filter(\.isCompleted)
+    }
+
     private var remainingProgress: Double {
         max(0, min(1, 1 - store.progress))
     }
 
     private var completedTaskCount: Int {
-        store.tasks.filter(\.isCompleted).count
+        completedTasks.count
     }
 
     var body: some View {
@@ -262,6 +266,25 @@ struct FloatingWidgetView: View {
                                     }
                                 )
                             }
+
+                            if !completedTasks.isEmpty {
+                                Text(appText("Готово в этой сессии", "Done in this session"))
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(GlassTheme.secondaryInk)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.top, 5)
+
+                                ForEach(completedTasks) { task in
+                                    GlassTaskRow(
+                                        task: task,
+                                        isActive: false,
+                                        isQuiet: true,
+                                        action: {
+                                            store.toggleTask(id: task.id)
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                     .scrollIndicators(.never)
@@ -382,7 +405,7 @@ struct FloatingWidgetView: View {
             Spacer()
 
             Label {
-                Text(appText("\(completedTaskCount) / \(store.tasks.count) задач", "\(completedTaskCount) / \(store.tasks.count) tasks"))
+                Text(appText("\(completedTaskCount) / \(store.currentSessionTasks.count) задач", "\(completedTaskCount) / \(store.currentSessionTasks.count) tasks"))
             } icon: {
                 Image(systemName: "checkmark.circle")
             }

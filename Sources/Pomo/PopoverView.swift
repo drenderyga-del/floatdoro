@@ -274,7 +274,7 @@ struct PopoverView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
 
-            if queuedTasks.isEmpty {
+            if queuedTasks.isEmpty && completedTasks.isEmpty {
                 emptyTasks
             } else {
                 ScrollView {
@@ -286,6 +286,23 @@ struct PopoverView: View {
                                 toggle: { store.toggleTask(id: task.id) },
                                 delete: { store.deleteTask(id: task.id) }
                             )
+                        }
+
+                        if !completedTasks.isEmpty {
+                            Text(appText("Готово в этой сессии", "Done in this session"))
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(palette.muted)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 8)
+
+                            ForEach(completedTasks) { task in
+                                TaskRow(
+                                    task: task,
+                                    isActive: false,
+                                    toggle: { store.toggleTask(id: task.id) },
+                                    delete: { store.deleteTask(id: task.id) }
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal, 14)
@@ -531,21 +548,25 @@ struct PopoverView: View {
     }
 
     private var taskSummary: String {
-        let completed = store.tasks.filter(\.isCompleted).count
+        let completed = completedTasks.count
         if queuedTasks.isEmpty {
             return completed == 0
                 ? appText("Следующих задач нет", "No next tasks")
-                : appText("Готовые — в истории", "Completed tasks are in history")
+                : appText("\(completed) готово в этой сессии", "\(completed) done in this session")
         }
         return appText(
-            "\(queuedTasks.count) в очереди",
-            "\(queuedTasks.count) in queue"
+            "\(queuedTasks.count) в очереди · \(completed) готово",
+            "\(queuedTasks.count) in queue · \(completed) done"
         )
     }
 
     private var queuedTasks: [FocusTask] {
-        let unfinishedTasks = store.tasks.filter { !$0.isCompleted }
+        let unfinishedTasks = store.currentSessionTasks.filter { !$0.isCompleted }
         return Array(unfinishedTasks.dropFirst())
+    }
+
+    private var completedTasks: [FocusTask] {
+        store.currentSessionTasks.filter(\.isCompleted)
     }
 
     private func settingsSectionTitle(_ title: String, detail: String) -> some View {

@@ -36,17 +36,20 @@ struct FocusTask: Codable, Identifiable, Equatable, Sendable {
     var title: String
     var isCompleted: Bool
     var completedAt: Date?
+    var sessionID: UUID?
 
     init(
         id: UUID = UUID(),
         title: String,
         isCompleted: Bool = false,
-        completedAt: Date? = nil
+        completedAt: Date? = nil,
+        sessionID: UUID? = nil
     ) {
         self.id = id
         self.title = title
         self.isCompleted = isCompleted
         self.completedAt = completedAt
+        self.sessionID = sessionID
     }
 }
 
@@ -149,6 +152,7 @@ struct PersistedPomoState: Codable, Sendable {
     var activeFocusPlannedSeconds: TimeInterval?
     var workStatusLabel: String?
     var restStatusLabel: String?
+    var currentWorkSessionID: UUID?
 }
 
 func timerDisplay(seconds rawSeconds: TimeInterval) -> String {

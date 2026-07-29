@@ -26,6 +26,26 @@ struct PomoTests {
         #expect(store.activeTask?.title == "Вторая")
     }
 
+    @Test("Completed tasks stay visible for the current work session")
+    func keepsCompletedTasksInCurrentSession() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        store.addTask(title: "Первая")
+        store.addTask(title: "Вторая")
+        store.completeCurrentTask()
+
+        #expect(store.currentSessionTasks.count == 2)
+        #expect(store.currentSessionTasks.first?.isCompleted == true)
+        #expect(store.activeTask?.title == "Вторая")
+
+        store.skipToNextPhase()
+        #expect(store.currentSessionTasks.isEmpty)
+
+        store.addTask(title: "Новая сессия")
+        #expect(store.currentSessionTasks.map(\.title) == ["Новая сессия"])
+    }
+
     @Test("Custom durations reset the paused interval")
     func appliesCustomDuration() {
         let defaults = makeDefaults()
