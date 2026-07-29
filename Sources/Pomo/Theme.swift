@@ -82,18 +82,18 @@ struct PomoPalette: Sendable {
     var breakWash: Color { breakWashToken.color }
 
     static let light = PomoPalette(
-        canvasToken: OKLCHColor(1.000, 0, 0, alpha: 0.02),
-        surfaceToken: OKLCHColor(1.000, 0, 0, alpha: 0.18),
-        raisedToken: OKLCHColor(1.000, 0, 0, alpha: 0.10),
-        borderToken: OKLCHColor(1.000, 0, 0, alpha: 0.34),
-        inkToken: OKLCHColor(0.170, 0, 0),
-        mutedToken: OKLCHColor(0.500, 0, 0),
+        canvasToken: OKLCHColor(1.000, 0, 0),
+        surfaceToken: OKLCHColor(1.000, 0, 0),
+        raisedToken: OKLCHColor(0.955, 0.025, 135),
+        borderToken: OKLCHColor(0.875, 0.035, 135),
+        inkToken: OKLCHColor(0.220, 0.035, 125),
+        mutedToken: OKLCHColor(0.470, 0.045, 125),
         honeyToken: OKLCHColor(0.460, 0.120, 135),
-        tomatoToken: OKLCHColor(0.650, 0.175, 145),
+        tomatoToken: OKLCHColor(0.500, 0.140, 135),
         breakToken: OKLCHColor(0.675, 0.145, 145),
-        skyToken: OKLCHColor(1.000, 0, 0, alpha: 0.08),
-        focusWashToken: OKLCHColor(1.000, 0, 0, alpha: 0.20),
-        breakWashToken: OKLCHColor(1.000, 0, 0, alpha: 0.20)
+        skyToken: OKLCHColor(0.920, 0.040, 135),
+        focusWashToken: OKLCHColor(0.965, 0.025, 135),
+        breakWashToken: OKLCHColor(0.950, 0.035, 145)
     )
 
     static let dark = PomoPalette(

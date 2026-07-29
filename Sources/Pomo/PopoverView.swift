@@ -7,21 +7,26 @@ struct PopoverView: View {
         case settings
     }
 
+    private enum StatusField: Hashable {
+        case work
+        case rest
+    }
+
     @ObservedObject var store: TimerStore
     let onQuit: () -> Void
 
     @State private var page: Page = .timer
     @State private var newTaskTitle = ""
+    @FocusState private var focusedStatusField: StatusField?
 
     private var palette: PomoPalette { store.theme.palette }
 
     var body: some View {
         ZStack {
-            BehindWindowGlass()
-
             if store.theme == .light {
-                Color.white.opacity(0.02)
+                palette.canvas
             } else {
+                BehindWindowGlass()
                 Color.black.opacity(0.20)
             }
 
@@ -330,7 +335,7 @@ struct PopoverView: View {
                 .font(.system(size: 13))
                 .foregroundStyle(palette.ink)
                 .onSubmit(addTask)
-                .accessibilityLabel("Название новой задачи")
+                .accessibilityLabel(appText("Название новой задачи", "New task title"))
 
             Button(action: addTask) {
                 Image(systemName: "plus")
@@ -342,7 +347,7 @@ struct PopoverView: View {
             .buttonStyle(.plain)
             .disabled(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .opacity(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
-            .accessibilityLabel("Добавить задачу")
+            .accessibilityLabel(appText("Добавить задачу", "Add task"))
         }
         .padding(.leading, 12)
         .padding(.trailing, 5)
@@ -424,6 +429,7 @@ struct PopoverView: View {
 
                     statusLabelField(
                         title: appText("Работа", "Work"),
+                        field: .work,
                         placeholder: store.defaultWorkStatusLabel,
                         text: Binding(
                             get: { store.workStatusLabel },
@@ -432,6 +438,7 @@ struct PopoverView: View {
                     )
                     statusLabelField(
                         title: appText("Отдых", "Rest"),
+                        field: .rest,
                         placeholder: store.defaultRestStatusLabel,
                         text: Binding(
                             get: { store.restStatusLabel },
@@ -484,7 +491,7 @@ struct PopoverView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(palette.focusWash)
                         )
-                        .accessibilityLabel("Ошибка. \(error)")
+                        .accessibilityLabel(appText("Ошибка. \(error)", "Error. \(error)"))
                 }
 
                 Divider()
@@ -518,6 +525,7 @@ struct PopoverView: View {
 
     private func statusLabelField(
         title: String,
+        field: StatusField,
         placeholder: String,
         text: Binding<String>
     ) -> some View {
@@ -526,18 +534,43 @@ struct PopoverView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(palette.ink)
                 .frame(width: 70, alignment: .leading)
-            TextField(placeholder, text: text)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(palette.ink)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 9).fill(palette.raised))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 9)
-                        .stroke(palette.border, lineWidth: 1)
-                }
-                .accessibilityLabel(title)
+
+            HStack(spacing: 8) {
+                Image(systemName: "pencil")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(
+                        focusedStatusField == field
+                            ? palette.tomato
+                            : palette.muted
+                    )
+
+                TextField(placeholder, text: text)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(palette.ink)
+                    .focused($focusedStatusField, equals: field)
+                    .accessibilityLabel(title)
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(palette.surface)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(
+                        focusedStatusField == field
+                            ? palette.tomato
+                            : palette.border,
+                        lineWidth: focusedStatusField == field ? 2 : 1
+                    )
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .onTapGesture {
+                focusedStatusField = field
+            }
+            .animation(.easeOut(duration: 0.16), value: focusedStatusField)
         }
     }
 
