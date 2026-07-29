@@ -1,15 +1,21 @@
 import AppKit
 import Foundation
 
-guard CommandLine.arguments.count == 2 else {
-    fputs("Usage: render_icon.swift <output.icns>\n", stderr)
+guard CommandLine.arguments.count == 3 else {
+    fputs("Usage: render_icon.swift <source.png> <output.icns>\n", stderr)
     exit(2)
 }
 
-let outputURL = URL(fileURLWithPath: CommandLine.arguments[1])
+let sourceURL = URL(fileURLWithPath: CommandLine.arguments[1])
+let outputURL = URL(fileURLWithPath: CommandLine.arguments[2])
 let fileManager = FileManager.default
 let temporaryURL = fileManager.temporaryDirectory
-    .appendingPathComponent("PomoIcon-\(UUID().uuidString).iconset", isDirectory: true)
+    .appendingPathComponent("MacodoroIcon-\(UUID().uuidString).iconset", isDirectory: true)
+
+guard let sourceImage = NSImage(contentsOf: sourceURL) else {
+    fputs("Unable to read icon source: \(sourceURL.path)\n", stderr)
+    exit(2)
+}
 
 try fileManager.createDirectory(at: temporaryURL, withIntermediateDirectories: true)
 defer { try? fileManager.removeItem(at: temporaryURL) }
@@ -31,62 +37,17 @@ func makeIcon(pixelSize: Int) throws -> Data {
     let image = NSImage(size: NSSize(width: pixelSize, height: pixelSize))
     image.lockFocus()
 
-    guard let context = NSGraphicsContext.current?.cgContext else {
-        throw NSError(domain: "PomoIcon", code: 1)
+    guard let graphicsContext = NSGraphicsContext.current else {
+        throw NSError(domain: "MacodoroIcon", code: 1)
     }
 
-    context.setAllowsAntialiasing(true)
-    let bounds = CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize)
-    let inset = CGFloat(pixelSize) * 0.055
-    let tile = bounds.insetBy(dx: inset, dy: inset)
-    let radius = CGFloat(pixelSize) * 0.24
-
-    NSColor.white.setFill()
-    NSBezierPath(roundedRect: tile, xRadius: radius, yRadius: radius).fill()
-
-    let dialCenter = CGPoint(x: CGFloat(pixelSize) * 0.5, y: CGFloat(pixelSize) * 0.48)
-    let dialRadius = CGFloat(pixelSize) * 0.255
-    let lineWidth = CGFloat(pixelSize) * 0.075
-    context.setStrokeColor(NSColor(srgbRed: 0.16, green: 0.55, blue: 0.32, alpha: 1).cgColor)
-    context.setLineWidth(lineWidth)
-    context.setLineCap(.round)
-    context.addArc(
-        center: dialCenter,
-        radius: dialRadius,
-        startAngle: -.pi * 0.12,
-        endAngle: .pi * 1.52,
-        clockwise: false
+    graphicsContext.imageInterpolation = .high
+    sourceImage.draw(
+        in: NSRect(x: 0, y: 0, width: pixelSize, height: pixelSize),
+        from: NSRect(origin: .zero, size: sourceImage.size),
+        operation: .copy,
+        fraction: 1
     )
-    context.strokePath()
-
-    let stemWidth = CGFloat(pixelSize) * 0.19
-    let stemHeight = CGFloat(pixelSize) * 0.07
-    let stemRect = CGRect(
-        x: CGFloat(pixelSize) * 0.5 - stemWidth / 2,
-        y: CGFloat(pixelSize) * 0.77,
-        width: stemWidth,
-        height: stemHeight
-    )
-    NSColor(srgbRed: 0.16, green: 0.55, blue: 0.32, alpha: 1).setFill()
-    NSBezierPath(roundedRect: stemRect, xRadius: stemHeight / 2, yRadius: stemHeight / 2).fill()
-
-    let paragraph = NSMutableParagraphStyle()
-    paragraph.alignment = .center
-    let attributes: [NSAttributedString.Key: Any] = [
-        .font: NSFont.monospacedDigitSystemFont(
-            ofSize: CGFloat(pixelSize) * 0.24,
-            weight: .bold
-        ),
-        .foregroundColor: NSColor(srgbRed: 0.10, green: 0.18, blue: 0.12, alpha: 1),
-        .paragraphStyle: paragraph
-    ]
-    let textRect = CGRect(
-        x: CGFloat(pixelSize) * 0.22,
-        y: CGFloat(pixelSize) * 0.34,
-        width: CGFloat(pixelSize) * 0.56,
-        height: CGFloat(pixelSize) * 0.28
-    )
-    NSString(string: "25").draw(in: textRect, withAttributes: attributes)
 
     image.unlockFocus()
     guard
@@ -94,7 +55,7 @@ func makeIcon(pixelSize: Int) throws -> Data {
         let bitmap = NSBitmapImageRep(data: tiff),
         let png = bitmap.representation(using: .png, properties: [:])
     else {
-        throw NSError(domain: "PomoIcon", code: 2)
+        throw NSError(domain: "MacodoroIcon", code: 2)
     }
     return png
 }
@@ -112,5 +73,5 @@ try process.run()
 process.waitUntilExit()
 
 guard process.terminationStatus == 0 else {
-    throw NSError(domain: "PomoIcon", code: Int(process.terminationStatus))
+    throw NSError(domain: "MacodoroIcon", code: Int(process.terminationStatus))
 }

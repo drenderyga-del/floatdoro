@@ -20,15 +20,84 @@ jobs:
       - name: Show Swift version
         run: swift --version
 
-      - name: Build release archive
+      - name: Validate release secrets
+        env:
+          DEVELOPER_ID_CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
+          DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          test -n "$DEVELOPER_ID_CERTIFICATE_P12"
+          test -n "$DEVELOPER_ID_CERTIFICATE_PASSWORD"
+          test -n "$APP_STORE_CONNECT_API_KEY_P8"
+          test -n "$APP_STORE_CONNECT_API_KEY_ID"
+          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
+
+      - name: Import Developer ID certificate
+        env:
+          DEVELOPER_ID_CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
+          DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH="$RUNNER_TEMP/developer-id.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/macodoro-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+
+          printf '%s' "$DEVELOPER_ID_CERTIFICATE_P12" | base64 -D > "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$DEVELOPER_ID_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+          SIGNING_IDENTITY="$(
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH" |
+              sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' |
+              head -1
+          )"
+          test -n "$SIGNING_IDENTITY"
+          echo "MACOS_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Prepare notarization key
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_P8" | base64 -D > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+          echo "APPLE_API_PRIVATE_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Build, sign, and notarize release archive
+        env:
+          MACOS_BUILD_NUMBER: ${{ github.run_number }}
+          NOTARIZE_APP: "1"
+          APPLE_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
         run: ./scripts/release_artifact.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Verify release application
+        run: |
+          codesign --verify --deep --strict --verbose=2 outputs/Macodoro.app
+          xcrun stapler validate outputs/Macodoro.app
+          spctl --assess --type execute --verbose=4 outputs/Macodoro.app
+          file outputs/Macodoro.app/Contents/MacOS/Macodoro
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          NOTES=$'## Compatibility\n\n- macOS 14 Sonoma or newer\n- Apple Silicon Macs (M1 or newer)\n\nDownload the ZIP, unpack `Macodoro.app`, and move it to Applications.'
+          NOTES=$'## Compatibility\n\n- macOS 14 Sonoma or newer\n- Apple Silicon Macs (M1 or newer)\n- Signed with Developer ID and notarized by Apple\n\nDownload the ZIP, unpack `Macodoro.app`, and move it to Applications.'
           gh release create "$TAG" \
             "outputs/release/Macodoro-${TAG#v}-macos.zip" \
             "outputs/release/Macodoro-${TAG#v}-macos.zip.sha256" \

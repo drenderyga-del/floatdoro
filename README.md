@@ -31,11 +31,22 @@ The packaged application is written to `outputs/Macodoro.app`.
 Push a version tag to create a GitHub Release with a ready-to-download application archive:
 
 ```sh
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 The release contains `Macodoro-<version>-macos.zip`, which holds `Macodoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
+
+Published builds are signed with a Developer ID certificate, notarized by Apple, and
+have the notarization ticket stapled to the application bundle.
+
+The release workflow expects these GitHub Actions secrets:
+
+- `DEVELOPER_ID_CERTIFICATE_P12` — base64-encoded Developer ID Application certificate and private key
+- `DEVELOPER_ID_CERTIFICATE_PASSWORD` — password used when exporting the `.p12`
+- `APP_STORE_CONNECT_API_KEY_P8` — base64-encoded App Store Connect API private key
+- `APP_STORE_CONNECT_API_KEY_ID` — API key ID
+- `APP_STORE_CONNECT_API_ISSUER_ID` — API issuer ID
 
 ## Compatibility
 
