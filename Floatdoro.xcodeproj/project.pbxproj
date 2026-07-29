@@ -1,0 +1,362 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07213D3F5DB9C8C360572C1D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D9A644F495BACB216D8F96 /* Models.swift */; };
+		106B080654C17FF5B4CF962A /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8EB1E324D7F2F974B9B10A3 /* AppIcon.icns */; };
+		3839ED5A22BF7DB77AE51B2F /* TimerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19248A516621B5F7BB7D6426 /* TimerStore.swift */; };
+		4DB474E90498FDB985D2FD76 /* FloatingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6B9BF8B917373E6F03011 /* FloatingWidget.swift */; };
+		57035A302ACEFD8845F5CA3F /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8ABE3B4D0A80EE8C9C6D31B /* Components.swift */; };
+		66EE683251EDA0117F1A00F4 /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800D1C5B5E18E01280D82A86 /* AppMain.swift */; };
+		746794CAFFBCB69763A56F52 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 41294505E264D9FC935220CF /* PrivacyInfo.xcprivacy */; };
+		7D1EE35AC0DBFF4BCE087DE4 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15BE8F1FE7596AC6A51C284 /* Theme.swift */; };
+		ADA1F6A86F7EC6769BA74FC3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10234E0335F9AA44D981450 /* Localization.swift */; };
+		C0999D96DD356C76185166DC /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C630E7BBC5949DA3A465E9 /* HistoryView.swift */; };
+		C381788D231E2A88B7693B07 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B590E5E8075BCF24627DC70 /* PopoverView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		16C630E7BBC5949DA3A465E9 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		19248A516621B5F7BB7D6426 /* TimerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerStore.swift; sourceTree = "<group>"; };
+		36D9A644F495BACB216D8F96 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		41294505E264D9FC935220CF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		52D6B9BF8B917373E6F03011 /* FloatingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWidget.swift; sourceTree = "<group>"; };
+		5B590E5E8075BCF24627DC70 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
+		800D1C5B5E18E01280D82A86 /* AppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMain.swift; sourceTree = "<group>"; };
+		B15BE8F1FE7596AC6A51C284 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		C10234E0335F9AA44D981450 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		D8EB1E324D7F2F974B9B10A3 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		E8ABE3B4D0A80EE8C9C6D31B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		EAD85D1ECEB7E95C8864F260 /* Floatdoro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Floatdoro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		060C8644FE746B316E14180C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EAD85D1ECEB7E95C8864F260 /* Floatdoro.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		149EF64504898E7EC9CFBFF9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D8EB1E324D7F2F974B9B10A3 /* AppIcon.icns */,
+				41294505E264D9FC935220CF /* PrivacyInfo.xcprivacy */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		191463C9E748F19D45E0F471 /* Pomo */ = {
+			isa = PBXGroup;
+			children = (
+				800D1C5B5E18E01280D82A86 /* AppMain.swift */,
+				E8ABE3B4D0A80EE8C9C6D31B /* Components.swift */,
+				52D6B9BF8B917373E6F03011 /* FloatingWidget.swift */,
+				16C630E7BBC5949DA3A465E9 /* HistoryView.swift */,
+				C10234E0335F9AA44D981450 /* Localization.swift */,
+				36D9A644F495BACB216D8F96 /* Models.swift */,
+				5B590E5E8075BCF24627DC70 /* PopoverView.swift */,
+				B15BE8F1FE7596AC6A51C284 /* Theme.swift */,
+				19248A516621B5F7BB7D6426 /* TimerStore.swift */,
+			);
+			name = Pomo;
+			path = Sources/Pomo;
+			sourceTree = "<group>";
+		};
+		AF9B3B03AB83FB2D23796A9E = {
+			isa = PBXGroup;
+			children = (
+				191463C9E748F19D45E0F471 /* Pomo */,
+				149EF64504898E7EC9CFBFF9 /* Resources */,
+				060C8644FE746B316E14180C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		823DEB4365C52C1A00EB3858 /* Floatdoro */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1232521BFA050C23D673DF19 /* Build configuration list for PBXNativeTarget "Floatdoro" */;
+			buildPhases = (
+				E75E0C3F57443B6D8B5B8DB9 /* Sources */,
+				C104A4615E68D3C94F0DB3BA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Floatdoro;
+			packageProductDependencies = (
+			);
+			productName = Floatdoro;
+			productReference = EAD85D1ECEB7E95C8864F260 /* Floatdoro.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0F0DA4005F6AE0E408DEE4C9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					823DEB4365C52C1A00EB3858 = {
+						DevelopmentTeam = VGHSSCFY5X;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = ACC61B632DB264BB3C48D67D /* Build configuration list for PBXProject "Floatdoro" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = AF9B3B03AB83FB2D23796A9E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 060C8644FE746B316E14180C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				823DEB4365C52C1A00EB3858 /* Floatdoro */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C104A4615E68D3C94F0DB3BA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				106B080654C17FF5B4CF962A /* AppIcon.icns in Resources */,
+				746794CAFFBCB69763A56F52 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E75E0C3F57443B6D8B5B8DB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66EE683251EDA0117F1A00F4 /* AppMain.swift in Sources */,
+				57035A302ACEFD8845F5CA3F /* Components.swift in Sources */,
+				4DB474E90498FDB985D2FD76 /* FloatingWidget.swift in Sources */,
+				C0999D96DD356C76185166DC /* HistoryView.swift in Sources */,
+				ADA1F6A86F7EC6769BA74FC3 /* Localization.swift in Sources */,
+				07213D3F5DB9C8C360572C1D /* Models.swift in Sources */,
+				C381788D231E2A88B7693B07 /* PopoverView.swift in Sources */,
+				7D1EE35AC0DBFF4BCE087DE4 /* Theme.swift in Sources */,
+				3839ED5A22BF7DB77AE51B2F /* TimerStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		364723AE54609C786CF2535F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = VGHSSCFY5X;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		46023B7E67A9797F2D825A1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Floatdoro.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro";
+				PRODUCT_MODULE_NAME = Floatdoro;
+				PRODUCT_NAME = Floatdoro;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		7EE7BB0E7C719A210154B53A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = VGHSSCFY5X;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		8E9C41AD2B7C1510E68F7E71 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Floatdoro.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro";
+				PRODUCT_MODULE_NAME = Floatdoro;
+				PRODUCT_NAME = Floatdoro;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1232521BFA050C23D673DF19 /* Build configuration list for PBXNativeTarget "Floatdoro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				46023B7E67A9797F2D825A1E /* Debug */,
+				8E9C41AD2B7C1510E68F7E71 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ACC61B632DB264BB3C48D67D /* Build configuration list for PBXProject "Floatdoro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				364723AE54609C786CF2535F /* Debug */,
+				7EE7BB0E7C719A210154B53A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0F0DA4005F6AE0E408DEE4C9 /* Project object */;
+}

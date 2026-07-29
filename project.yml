@@ -1,0 +1,50 @@
+name: Floatdoro
+
+options:
+  bundleIdPrefix: io.github.drenderyga-del
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "26.0"
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: VGHSSCFY5X
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  Floatdoro:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Sources/Pomo
+      - path: Resources/AppIcon.icns
+        buildPhase: resources
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: Floatdoro
+        PRODUCT_MODULE_NAME: Floatdoro
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.drenderyga-del.floatdoro
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Resources/Floatdoro.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+
+schemes:
+  Floatdoro:
+    build:
+      targets:
+        Floatdoro: all
+    run:
+      config: Debug
+    archive:
+      config: Release

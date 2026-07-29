@@ -4,13 +4,10 @@ set -euo pipefail
 
 SCRIPT_DIR=${0:A:h}
 PROJECT_DIR=${SCRIPT_DIR:h}
-APP_DIR="$PROJECT_DIR/outputs/Macodoro.app"
+APP_DIR="$PROJECT_DIR/outputs/Floatdoro.app"
 ARTIFACTS_DIR="$PROJECT_DIR/outputs/release"
 
-VERSION=${1:-}
-if [[ -z "$VERSION" ]]; then
-    VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PROJECT_DIR/Resources/Info.plist")
-fi
+VERSION=${1:-1.0.0}
 VERSION=${VERSION#v}
 
 if [[ ! "$VERSION" =~ ^[A-Za-z0-9._-]+$ ]]; then
@@ -25,7 +22,7 @@ if [[ "${NOTARIZE_APP:-0}" == "1" ]]; then
 fi
 
 mkdir -p "$ARTIFACTS_DIR"
-ZIP_PATH="$ARTIFACTS_DIR/Macodoro-$VERSION-macos.zip"
+ZIP_PATH="$ARTIFACTS_DIR/Floatdoro-$VERSION-macos.zip"
 CHECKSUM_PATH="$ZIP_PATH.sha256"
 
 rm -f "$ZIP_PATH" "$CHECKSUM_PATH"

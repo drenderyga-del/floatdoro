@@ -3,21 +3,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "Pomo",
+    name: "Floatdoro",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "Pomo", targets: ["Pomo"])
+        .executable(name: "Floatdoro", targets: ["Floatdoro"])
     ],
     targets: [
         .executableTarget(
-            name: "Pomo",
+            name: "Floatdoro",
             path: "Sources/Pomo"
         ),
         .testTarget(
-            name: "PomoTests",
-            dependencies: ["Pomo"],
+            name: "FloatdoroTests",
+            dependencies: ["Floatdoro"],
             path: "Tests/PomoTests"
         )
     ]

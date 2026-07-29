@@ -466,7 +466,7 @@ struct PopoverView: View {
 
                     SettingsToggleRow(
                         title: appText("Запускать при входе", "Launch at login"),
-                        detail: appText("Macodoro появляется в меню-баре после входа в macOS.", "Macodoro appears in the menu bar after login."),
+                        detail: appText("Floatdoro появляется в меню-баре после входа в macOS.", "Floatdoro appears in the menu bar after login."),
                         isOn: Binding(
                             get: { store.launchAtLoginEnabled },
                             set: { store.setLaunchAtLogin($0) }
@@ -501,7 +501,7 @@ struct PopoverView: View {
                             .foregroundStyle(palette.ink)
                     }
                     Spacer()
-                    Button(appText("Выйти из Macodoro", "Quit Macodoro"), action: onQuit)
+                    Button(appText("Выйти из Floatdoro", "Quit Floatdoro"), action: onQuit)
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(palette.tomato)

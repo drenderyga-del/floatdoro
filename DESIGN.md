@@ -1,8 +1,8 @@
-# Pomo Design System
+# Floatdoro Design System
 
 ## Direction
 
-Pomo takes its primary cue from the supplied mobile timer screenshot: a wide physical-looking timer with oversized countdown digits. The primary experience uses pure white, deep olive, fresh green, and soft sage while retaining a separately tuned dark treatment as an optional theme. The menu-bar presentation stays deliberately native and monochrome; the floating reminder carries the expressive design.
+Floatdoro takes its primary cue from the supplied mobile timer screenshot: a wide physical-looking timer with oversized countdown digits. The primary experience uses pure white, deep olive, fresh green, and soft sage while retaining a separately tuned dark treatment as an optional theme. The menu-bar presentation stays deliberately native and monochrome; the floating reminder carries the expressive design.
 
 Physical scene: one person working late at a Mac, moving between full-screen applications, with a single instrument-like timer remaining legible in peripheral vision.
 

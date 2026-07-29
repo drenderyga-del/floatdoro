@@ -10,7 +10,7 @@ let sourceURL = URL(fileURLWithPath: CommandLine.arguments[1])
 let outputURL = URL(fileURLWithPath: CommandLine.arguments[2])
 let fileManager = FileManager.default
 let temporaryURL = fileManager.temporaryDirectory
-    .appendingPathComponent("MacodoroIcon-\(UUID().uuidString).iconset", isDirectory: true)
+    .appendingPathComponent("FloatdoroIcon-\(UUID().uuidString).iconset", isDirectory: true)
 
 guard let sourceImage = NSImage(contentsOf: sourceURL) else {
     fputs("Unable to read icon source: \(sourceURL.path)\n", stderr)
@@ -38,7 +38,7 @@ func makeIcon(pixelSize: Int) throws -> Data {
     image.lockFocus()
 
     guard let graphicsContext = NSGraphicsContext.current else {
-        throw NSError(domain: "MacodoroIcon", code: 1)
+        throw NSError(domain: "FloatdoroIcon", code: 1)
     }
 
     graphicsContext.imageInterpolation = .high
@@ -55,7 +55,7 @@ func makeIcon(pixelSize: Int) throws -> Data {
         let bitmap = NSBitmapImageRep(data: tiff),
         let png = bitmap.representation(using: .png, properties: [:])
     else {
-        throw NSError(domain: "MacodoroIcon", code: 2)
+        throw NSError(domain: "FloatdoroIcon", code: 2)
     }
     return png
 }
@@ -73,5 +73,5 @@ try process.run()
 process.waitUntilExit()
 
 guard process.terminationStatus == 0 else {
-    throw NSError(domain: "MacodoroIcon", code: Int(process.terminationStatus))
+    throw NSError(domain: "FloatdoroIcon", code: Int(process.terminationStatus))
 }

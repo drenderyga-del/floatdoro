@@ -1,8 +1,8 @@
 import Foundation
 import Testing
-@testable import Pomo
+@testable import Floatdoro
 
-@Suite("Pomo core behavior", .serialized)
+@Suite("Floatdoro core behavior", .serialized)
 @MainActor
 struct PomoTests {
     @Test("Timer formats long and short durations")
