@@ -647,7 +647,9 @@ final class FloatingPanelController {
         if visible {
             show()
         } else {
-            panel?.orderOut(nil)
+            if panel?.isVisible == true {
+                panel?.orderOut(nil)
+            }
         }
     }
 
@@ -655,6 +657,7 @@ final class FloatingPanelController {
         if panel == nil {
             panel = makePanel()
         }
+        guard panel?.isVisible != true else { return }
         panel?.orderFrontRegardless()
         panel?.makeFirstResponder(nil)
     }

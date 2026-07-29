@@ -104,6 +104,13 @@ struct PopoverView: View {
                 page = page == .settings ? .timer : .settings
                 store.clearError()
             }
+
+            headerIconButton(
+                systemImage: "power",
+                label: appText("Выйти из Floatdoro", "Quit Floatdoro"),
+                isSelected: false,
+                action: onQuit
+            )
         }
         .padding(.horizontal, 22)
         .padding(.top, 18)
