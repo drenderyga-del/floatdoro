@@ -401,7 +401,7 @@ struct PopoverView: View {
                         update: { store.setDurations(focus: $0, breakTime: store.breakMinutes) }
                     )
                     DurationStepper(
-                        title: appText("Перерыв", "Break"),
+                        title: store.resolvedRestStatusLabel,
                         value: store.breakMinutes,
                         range: 1...60,
                         update: { store.setDurations(focus: store.focusMinutes, breakTime: $0) }
