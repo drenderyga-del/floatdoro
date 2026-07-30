@@ -17,6 +17,8 @@ struct ModeBadge: View {
                 .frame(width: 8, height: 8)
             Text(title)
                 .font(.system(size: 11, weight: .semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
         .foregroundStyle(color)
         .padding(.horizontal, 10)
@@ -48,7 +50,7 @@ struct CircleActionButton: View {
 
     private var foreground: Color {
         switch treatment {
-        case .primary: .white
+        case .primary: palette.onHoney
         case .secondary, .quiet: palette.ink
         }
     }

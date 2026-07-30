@@ -49,31 +49,19 @@ struct PopoverView: View {
                 .animation(.easeOut(duration: 0.18), value: page)
             }
         }
-        .frame(width: 380, height: 560)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.pomoPalette, palette)
         .tint(palette.tomato)
         .preferredColorScheme(store.theme.colorScheme)
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(palette.raised)
-                        .frame(width: 34, height: 34)
-                        .overlay {
-                            Circle()
-                                .stroke(palette.border, lineWidth: 1)
-                        }
-                    Image(systemName: "timer")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(palette.ink)
-                }
-                Text("POMO")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(palette.ink)
-            }
+        HStack(spacing: 7) {
+            Text("Floatdoro")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(palette.ink)
+                .lineLimit(1)
+                .frame(width: 64, alignment: .leading)
 
             Spacer()
 
@@ -82,6 +70,7 @@ struct PopoverView: View {
                 title: store.phaseStatusLabel,
                 accessibilityLabel: store.phaseStatusAccessibilityLabel
             )
+            .frame(maxWidth: 90)
 
             headerIconButton(
                 systemImage: "clock.arrow.circlepath",
@@ -112,9 +101,9 @@ struct PopoverView: View {
                 action: onQuit
             )
         }
-        .padding(.horizontal, 22)
-        .padding(.top, 18)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 14)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
     }
 
     private func headerIconButton(
@@ -125,9 +114,9 @@ struct PopoverView: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(isSelected ? palette.tomato : palette.muted)
-                .frame(width: 34, height: 34)
+                .frame(width: 30, height: 30)
                 .background(
                     Circle()
                         .fill(isSelected ? palette.surface : palette.raised)
@@ -145,131 +134,168 @@ struct PopoverView: View {
 
     private var timerPage: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 14) {
-                Text(store.displayTime)
-                    .font(.system(size: 72, weight: .light, design: .rounded))
-                    .monospacedDigit()
-                    .tracking(-1.7)
-                    .foregroundStyle(palette.ink)
-                    .contentTransition(.numericText(countsDown: true))
-                    .accessibilityLabel(timerAccessibilityLabel(seconds: store.remainingSeconds))
+            timerOverview
+            timerControls
 
-                Text(appText("из", "of") + " \(timerDisplay(seconds: store.durationSeconds))")
-                    .font(.system(size: 16, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(palette.muted)
+            Divider()
+                .overlay(palette.border)
 
-                SegmentedProgressRail(
-                    progress: max(0, min(1, 1 - store.progress)),
-                    phase: store.phase,
-                    segmentCount: 10
-                )
-                    .frame(width: 326)
+            taskSection
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
 
-                HStack {
-                    Text("0")
-                    Spacer()
-                    Text(timerDisplay(seconds: store.durationSeconds / 2))
-                    Spacer()
-                    Text(timerDisplay(seconds: store.durationSeconds))
-                }
-                .font(.system(size: 10, weight: .medium))
+    private var timerOverview: some View {
+        VStack(spacing: 8) {
+            Text(store.displayTime)
+                .font(.system(size: 58, weight: .light, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(palette.muted)
-                .frame(width: 326)
+                .tracking(-1.4)
+                .foregroundStyle(palette.ink)
+                .contentTransition(.numericText(countsDown: true))
+                .accessibilityLabel(
+                    timerAccessibilityLabel(seconds: store.remainingSeconds)
+                )
 
-                HStack(spacing: 10) {
+            Text(
+                appText("из", "of")
+                    + " \(timerDisplay(seconds: store.durationSeconds))"
+            )
+            .font(.system(size: 13, weight: .medium))
+            .monospacedDigit()
+            .foregroundStyle(palette.muted)
+
+            SegmentedProgressRail(
+                progress: max(0, min(1, 1 - store.progress)),
+                phase: store.phase,
+                segmentCount: 10
+            )
+
+            HStack {
+                Text("0")
+                Spacer()
+                Text(timerDisplay(seconds: store.durationSeconds / 2))
+                Spacer()
+                Text(timerDisplay(seconds: store.durationSeconds))
+            }
+            .font(.system(size: 9, weight: .medium))
+            .monospacedDigit()
+            .foregroundStyle(palette.muted)
+
+            if store.phase == .breakTime || store.activeTask != nil {
+                HStack(spacing: 9) {
                     Circle()
                         .fill(
                             store.phase == .focus
                                 ? palette.tomato
                                 : palette.breakGreen
                         )
-                        .frame(width: 9, height: 9)
+                        .frame(width: 8, height: 8)
 
                     Text(store.activeTaskTitle)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(palette.ink)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: 292, minHeight: 38)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(palette.surface)
-                )
+                .frame(minHeight: 28)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
-            .padding(.top, 2)
-
-            HStack(spacing: 8) {
-                GlassActionButton(
-                    systemImage: "arrow.counterclockwise",
-                    title: nil,
-                    accessibilityLabel: appText("Сбросить текущий интервал", "Reset current interval"),
-                    isEnabled: true,
-                    action: { store.resetCurrentInterval() }
-                )
-
-                GlassActionButton(
-                    systemImage: store.isRunning ? "pause.fill" : "play.fill",
-                    title: nil,
-                    accessibilityLabel: store.isRunning
-                        ? appText("Поставить на паузу", "Pause timer")
-                        : appText("Запустить таймер", "Start timer"),
-                    isEnabled: true,
-                    action: { store.toggleRunning() }
-                )
-
-                GlassActionButton(
-                    systemImage: "forward.fill",
-                    title: nil,
-                    accessibilityLabel: store.phase == .focus
-                        ? appText("Перейти к \(store.resolvedRestStatusLabel.lowercased())", "Start \(store.resolvedRestStatusLabel)")
-                        : appText("Перейти к \(store.resolvedWorkStatusLabel.lowercased())", "Start \(store.resolvedWorkStatusLabel)"),
-                    isEnabled: true,
-                    action: { store.skipToNextPhase() }
-                )
-
-                GlassActionButton(
-                    systemImage: "checkmark",
-                    title: nil,
-                    accessibilityLabel: appText("Завершить текущую задачу", "Complete current task"),
-                    isEnabled: store.canCompleteTask,
-                    action: { store.completeCurrentTask() }
-                )
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
-            .padding(.bottom, 14)
-
-            Divider()
-                .overlay(palette.border)
-                .padding(.horizontal, 18)
-
-            taskSection
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
+    }
+
+    private var timerControls: some View {
+        HStack(spacing: 8) {
+            CircleActionButton(
+                systemImage: "arrow.counterclockwise",
+                label: appText(
+                    "Сбросить текущий интервал",
+                    "Reset current interval"
+                ),
+                size: 36,
+                action: { store.resetCurrentInterval() }
+            )
+
+            Button(action: { store.toggleRunning() }) {
+                HStack(spacing: 7) {
+                    Image(
+                        systemName: store.isRunning
+                            ? "pause.fill"
+                            : "play.fill"
+                    )
+                    .font(.system(size: 12, weight: .bold))
+
+                    Text(
+                        store.isRunning
+                            ? appText("Пауза", "Pause")
+                            : appText("Старт", "Start")
+                    )
+                    .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(palette.onHoney)
+                .frame(maxWidth: .infinity)
+                .frame(height: 36)
+                .background(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(palette.honey)
+                )
+                .contentShape(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                )
+            }
+            .buttonStyle(GlassPressButtonStyle())
+            .accessibilityLabel(
+                store.isRunning
+                    ? appText("Поставить на паузу", "Pause timer")
+                    : appText("Запустить таймер", "Start timer")
+            )
+
+            CircleActionButton(
+                systemImage: "forward.fill",
+                label: store.phase == .focus
+                    ? appText(
+                        "Перейти к \(store.resolvedRestStatusLabel.lowercased())",
+                        "Start \(store.resolvedRestStatusLabel)"
+                    )
+                    : appText(
+                        "Перейти к \(store.resolvedWorkStatusLabel.lowercased())",
+                        "Start \(store.resolvedWorkStatusLabel)"
+                    ),
+                size: 36,
+                action: { store.skipToNextPhase() }
+            )
+
+            CircleActionButton(
+                systemImage: "checkmark",
+                label: appText(
+                    "Завершить текущую задачу",
+                    "Complete current task"
+                ),
+                size: 36,
+                isEnabled: store.canCompleteTask,
+                action: { store.completeCurrentTask() }
+            )
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
     }
 
     private var taskSection: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
-                Label(appText("Добавить задачу для работы", "Add a task for work"), systemImage: "plus.circle.fill")
-                    .font(.system(size: 13, weight: .bold))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(appText("Новая задача", "New task"))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(palette.ink)
 
                 addTaskField
             }
             .padding(.horizontal, 16)
-            .padding(.top, 14)
-            .padding(.bottom, 14)
+            .padding(.vertical, 9)
 
             Divider()
                 .overlay(palette.border)
-                .padding(.horizontal, 18)
 
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -282,12 +308,11 @@ struct PopoverView: View {
                 }
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
 
             if queuedTasks.isEmpty && completedTasks.isEmpty {
-                emptyTasks
+                Spacer(minLength: 0)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 6) {
@@ -311,28 +336,13 @@ struct PopoverView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
                 }
-                .frame(maxHeight: 160)
             }
 
         }
         .frame(maxHeight: .infinity, alignment: .top)
-    }
-
-    private var emptyTasks: some View {
-        VStack(spacing: 7) {
-            Image(systemName: "checklist")
-                .font(.system(size: 21, weight: .medium))
-                .foregroundStyle(palette.tomato)
-            Text(appText("Следующих задач пока нет. Добавьте одну выше.", "There are no next tasks yet. Add one above."))
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(palette.muted)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 82)
-        .accessibilityElement(children: .combine)
     }
 
     private var addTaskField: some View {
@@ -347,8 +357,8 @@ struct PopoverView: View {
             Button(action: addTask) {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 30, height: 30)
+                    .foregroundStyle(palette.onHoney)
+                    .frame(width: 28, height: 28)
                     .background(Circle().fill(palette.honey))
             }
             .buttonStyle(.plain)
@@ -356,11 +366,11 @@ struct PopoverView: View {
             .opacity(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
             .accessibilityLabel(appText("Добавить задачу", "Add task"))
         }
-        .padding(.leading, 12)
-        .padding(.trailing, 5)
-        .padding(.vertical, 5)
+        .padding(.leading, 11)
+        .padding(.trailing, 4)
+        .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(palette.surface)
                 .stroke(palette.border, lineWidth: 1)
         )
@@ -368,7 +378,7 @@ struct PopoverView: View {
 
     private var settingsPage: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 14) {
                     settingsSectionTitle(appText("Оформление", "Appearance"), detail: appText("Светлая тема включена по умолчанию.", "Light theme is enabled by default."))
 
@@ -541,8 +551,8 @@ struct PopoverView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.top, 18)
-            .padding(.bottom, 24)
+            .padding(.top, 14)
+            .padding(.bottom, 20)
         }
     }
 
@@ -644,7 +654,7 @@ private struct PresetButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 12, weight: .bold, design: .rounded))
             .monospacedDigit()
-            .foregroundStyle(selected ? Color.white : palette.ink)
+            .foregroundStyle(selected ? palette.onHoney : palette.ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 9)
             .background(
@@ -663,7 +673,7 @@ private struct ThemeButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(selected ? Color.white : palette.muted)
+            .foregroundStyle(selected ? palette.onHoney : palette.muted)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
             .background(

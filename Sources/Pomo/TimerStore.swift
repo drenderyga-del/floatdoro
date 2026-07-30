@@ -30,6 +30,7 @@ final class TimerStore: ObservableObject {
     @Published private(set) var currentWorkSessionID: UUID
 
     private let defaults: UserDefaults
+    private let allowsSystemSideEffects: Bool
     private let persistenceKey = "pomo.state.v1"
     private var ticker: Timer?
     private var notificationPermissionRequested = false
@@ -38,8 +39,13 @@ final class TimerStore: ObservableObject {
     private var activeFocusTaskTitle: String?
     private var activeFocusPlannedSeconds: TimeInterval?
 
-    init(defaults: UserDefaults = .standard, startsTicker: Bool = true) {
+    init(
+        defaults: UserDefaults = .standard,
+        startsTicker: Bool = true,
+        allowsSystemSideEffects: Bool = true
+    ) {
         self.defaults = defaults
+        self.allowsSystemSideEffects = allowsSystemSideEffects
 
         if
             let data = defaults.data(forKey: persistenceKey),
@@ -104,7 +110,8 @@ final class TimerStore: ObservableObject {
             currentWorkSessionID = UUID()
         }
 
-        launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
+        launchAtLoginEnabled = allowsSystemSideEffects
+            && SMAppService.mainApp.status == .enabled
 
         if isRunning, let endDate, endDate <= Date() {
             isRunning = false
@@ -390,6 +397,12 @@ final class TimerStore: ObservableObject {
     func setLaunchAtLogin(_ enabled: Bool) {
         errorMessage = nil
 
+        guard allowsSystemSideEffects else {
+            launchAtLoginEnabled = enabled
+            persist()
+            return
+        }
+
         do {
             if enabled {
                 try SMAppService.mainApp.register()
@@ -445,7 +458,7 @@ final class TimerStore: ObservableObject {
         now = Date()
         completionPulse += 1
 
-        if notify {
+        if notify, allowsSystemSideEffects {
             sendCompletionNotification(for: completedPhase)
             if soundEnabled {
                 NSSound(named: "Glass")?.play()
@@ -490,6 +503,7 @@ final class TimerStore: ObservableObject {
     }
 
     private func requestNotificationPermissionIfNeeded() {
+        guard allowsSystemSideEffects else { return }
         guard Bundle.main.bundleURL.pathExtension == "app" else { return }
         guard !notificationPermissionRequested else { return }
         notificationPermissionRequested = true
@@ -501,6 +515,7 @@ final class TimerStore: ObservableObject {
     }
 
     private func sendCompletionNotification(for completedPhase: TimerPhase) {
+        guard allowsSystemSideEffects else { return }
         guard Bundle.main.bundleURL.pathExtension == "app" else { return }
         let content = UNMutableNotificationContent()
         if completedPhase == .focus {

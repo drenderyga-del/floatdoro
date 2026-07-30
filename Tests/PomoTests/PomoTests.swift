@@ -98,6 +98,35 @@ struct PomoTests {
         #expect(store.isFloatingVisible)
     }
 
+    @Test("Break mode hides the previous work task title")
+    func breakModeUsesRestMessage() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        store.addTask(title: "Рабочая задача")
+        store.skipToNextPhase()
+
+        #expect(store.phase == .breakTime)
+        #expect(
+            store.activeTaskTitle
+                == appText("Можно выдохнуть", "Take a breather")
+        )
+    }
+
+    @Test("Preview settings do not touch system launch at login")
+    func previewSystemSettingsStaySandboxed() {
+        let defaults = makeDefaults()
+        let store = TimerStore(
+            defaults: defaults,
+            startsTicker: false,
+            allowsSystemSideEffects: false
+        )
+
+        #expect(!store.launchAtLoginEnabled)
+        store.setLaunchAtLogin(true)
+        #expect(store.launchAtLoginEnabled)
+    }
+
     @Test("Clearing completed tasks keeps their history")
     func completedTasksRemainInHistory() {
         let defaults = makeDefaults()

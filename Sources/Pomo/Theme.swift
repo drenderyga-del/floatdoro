@@ -75,6 +75,11 @@ struct PomoPalette: Sendable {
     var ink: Color { inkToken.color }
     var muted: Color { mutedToken.color }
     var honey: Color { honeyToken.color }
+    var onHoney: Color {
+        honeyToken.lightness >= 0.60
+            ? OKLCHColor(0.180, 0.025, 135).color
+            : .white
+    }
     var tomato: Color { tomatoToken.color }
     var breakGreen: Color { breakToken.color }
     var sky: Color { skyToken.color }

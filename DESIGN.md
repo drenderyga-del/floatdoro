@@ -55,7 +55,7 @@ A draggable, always-on-top, freely resizable reminder. It opens at 390×440 poin
 
 ### Popover
 
-A focused 380×560 point surface sized for a 14-inch MacBook display. The countdown remains the strongest landmark while task entry and the queue stay visible below it. Settings and history replace the main content in place and scroll within the same compact surface.
+A focused 360×480 point surface sized for a 14-inch MacBook display. The compact toolbar, countdown, primary timer control, task entry, and queue form one vertical hierarchy without overflow. The queue receives the remaining height instead of forcing fixed empty-state spacing. Settings and history replace the main content in place and scroll within the same compact surface.
 
 ### Weekly history
 

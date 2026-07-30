@@ -8,6 +8,10 @@ private extension Notification.Name {
     )
 }
 
+private enum MainPanelMetrics {
+    static let contentSize = NSSize(width: 360, height: 480)
+}
+
 @main
 enum PomoMain {
     @MainActor
@@ -57,7 +61,7 @@ enum PomoMain {
 @MainActor
 final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     private let previewMode: Bool
-    private let store = TimerStore()
+    private let store: TimerStore
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
     private var previewWindow: NSWindow?
@@ -66,6 +70,38 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
 
     init(previewMode: Bool) {
         self.previewMode = previewMode
+        if previewMode {
+            let suiteName = "io.github.drenderyga-del.floatdoro.preview"
+            let previewDefaults = UserDefaults(suiteName: suiteName)!
+            previewDefaults.removePersistentDomain(forName: suiteName)
+            let previewStore = TimerStore(
+                defaults: previewDefaults,
+                startsTicker: true,
+                allowsSystemSideEffects: false
+            )
+            previewStore.addTask(
+                title: appText(
+                    "Подготовить описание релиза",
+                    "Prepare the release notes"
+                )
+            )
+            previewStore.addTask(
+                title: appText(
+                    "Проверить скриншоты App Store",
+                    "Review App Store screenshots"
+                )
+            )
+            previewStore.completeCurrentTask()
+            previewStore.addTask(
+                title: appText(
+                    "Проверить финальную сборку",
+                    "Verify the final build"
+                )
+            )
+            store = previewStore
+        } else {
+            store = TimerStore()
+        }
         super.init()
     }
 
@@ -85,14 +121,16 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
             floatingPanelController.setVisible(shouldShowFocusWindow)
         }
 
-        store.objectWillChange
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                DispatchQueue.main.async { [weak self] in
-                    self?.refreshChrome()
+        if !previewMode {
+            store.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    DispatchQueue.main.async { [weak self] in
+                        self?.refreshChrome()
+                    }
                 }
-            }
-            .store(in: &subscriptions)
+                .store(in: &subscriptions)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -136,7 +174,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
 
     private func configurePopover() {
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 380, height: 560)
+        popover.contentSize = MainPanelMetrics.contentSize
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
@@ -270,10 +308,13 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
             onQuit: { NSApp.terminate(nil) }
         )
         let controller = NSHostingController(rootView: content)
+        controller.sizingOptions = []
         let window = NSWindow(contentViewController: controller)
         window.title = "Floatdoro Preview"
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 380, height: 560))
+        window.contentMinSize = MainPanelMetrics.contentSize
+        window.contentMaxSize = MainPanelMetrics.contentSize
+        window.setContentSize(MainPanelMetrics.contentSize)
         window.center()
         window.makeKeyAndOrderFront(nil)
         previewWindow = window

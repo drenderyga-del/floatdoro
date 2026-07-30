@@ -3,6 +3,7 @@ import SwiftUI
 struct HistoryView: View {
     @ObservedObject var store: TimerStore
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var weekOffset = 0
     @State private var expandedDayIDs: Set<Date> = []
 
@@ -42,18 +43,42 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                weekNavigation
-                summaryPanel
-                weeklyChart
-                historyList
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    weekNavigation
+                    summaryPanel
+                    weeklyChart
+                    historyList
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 8)
+                .padding(.bottom, 18)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
+            .scrollIndicators(.never)
+            .onChange(of: expandedDayIDs) { oldValue, newValue in
+                guard
+                    let expandedDayID = newValue
+                        .subtracting(oldValue)
+                        .first,
+                    let scrollTargetID = historyDays
+                        .first(where: { $0.id == expandedDayID })?
+                        .events
+                        .first?
+                        .id
+                else { return }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+                    if reduceMotion {
+                        proxy.scrollTo(scrollTargetID, anchor: .bottom)
+                    } else {
+                        withAnimation(.easeOut(duration: 0.18)) {
+                            proxy.scrollTo(scrollTargetID, anchor: .bottom)
+                        }
+                    }
+                }
+            }
         }
-        .scrollIndicators(.never)
     }
 
     private var weekNavigation: some View {
@@ -120,8 +145,8 @@ struct HistoryView: View {
 
             Text(
                 appText(
-                    "Фокус-время считает полностью завершённые рабочие интервалы. Задача попадает в выполненные только после отметки галочкой.",
-                    "Focus time counts fully completed work intervals. A task counts as completed only after you check it off."
+                    "Считаются завершённые интервалы; задача — только после галочки.",
+                    "Completed intervals count; tasks count only after you check them off."
                 )
             )
             .font(.system(size: 10, weight: .medium))
@@ -173,7 +198,7 @@ struct HistoryView: View {
                     dayColumn(day)
                 }
             }
-            .frame(height: 112)
+            .frame(height: 94)
         }
     }
 
@@ -213,7 +238,7 @@ struct HistoryView: View {
                     }
                 }
             }
-            .frame(height: 72)
+            .frame(height: 56)
 
             Text(weekdayLabel(day.date))
                 .font(.system(size: 10, weight: isToday ? .semibold : .medium))
@@ -249,6 +274,7 @@ struct HistoryView: View {
                 VStack(spacing: 8) {
                     ForEach(historyDays) { day in
                         historyDayCard(day)
+                            .id(day.id)
                     }
                 }
             }
@@ -260,11 +286,18 @@ struct HistoryView: View {
 
         return VStack(spacing: 0) {
             Button {
-                withAnimation(.easeOut(duration: 0.18)) {
+                let updateExpansion = {
                     if isExpanded {
                         expandedDayIDs.remove(day.id)
                     } else {
                         expandedDayIDs.insert(day.id)
+                    }
+                }
+                if reduceMotion {
+                    updateExpansion()
+                } else {
+                    withAnimation(.easeOut(duration: 0.18)) {
+                        updateExpansion()
                     }
                 }
             } label: {
@@ -302,6 +335,16 @@ struct HistoryView: View {
                     "\(dayTitle(day.date)), \(daySummary(day))"
                 )
             )
+            .accessibilityValue(
+                isExpanded
+                    ? appText("Развернуто", "Expanded")
+                    : appText("Свернуто", "Collapsed")
+            )
+            .accessibilityHint(
+                isExpanded
+                    ? appText("Скрыть события дня", "Hide this day's events")
+                    : appText("Показать события дня", "Show this day's events")
+            )
 
             if isExpanded {
                 Divider()
@@ -313,6 +356,7 @@ struct HistoryView: View {
                         index,
                         event in
                         historyRow(event)
+                            .id(event.id)
 
                         if index < day.events.count - 1 {
                             Divider()
