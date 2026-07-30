@@ -65,7 +65,7 @@ swift scripts/build_app_store_screenshots.swift
 1. Merge and deploy the `docs` directory through GitHub Pages.
 2. Confirm that the privacy, support, and marketing URLs load publicly.
 3. Create the app record with the values above.
-4. Archive build `1` with version `1.0.0`.
+4. Archive build `2` with version `1.0.0`.
 5. Validate and upload the archive from Xcode Organizer.
 6. Wait for processing and select the build under macOS 1.0.
 7. Complete App Privacy, age rating, availability, and pricing.
