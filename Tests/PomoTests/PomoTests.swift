@@ -26,8 +26,8 @@ struct PomoTests {
         #expect(store.activeTask?.title == "Вторая")
     }
 
-    @Test("Completed tasks stay visible for the current work session")
-    func keepsCompletedTasksInCurrentSession() {
+    @Test("Unfinished tasks carry into the next work session")
+    func carriesUnfinishedTasksIntoNextSession() {
         let defaults = makeDefaults()
         let store = TimerStore(defaults: defaults, startsTicker: false)
 
@@ -40,10 +40,39 @@ struct PomoTests {
         #expect(store.activeTask?.title == "Вторая")
 
         store.skipToNextPhase()
-        #expect(store.currentSessionTasks.isEmpty)
+        #expect(store.currentSessionTasks.map(\.title) == ["Вторая"])
+        #expect(store.activeTask?.title == "Вторая")
 
         store.addTask(title: "Новая сессия")
-        #expect(store.currentSessionTasks.map(\.title) == ["Новая сессия"])
+        #expect(store.currentSessionTasks.map(\.title) == [
+            "Вторая",
+            "Новая сессия"
+        ])
+    }
+
+    @Test("Restoring state recovers unfinished tasks from older sessions")
+    func recoversUnfinishedTasksOnRestore() throws {
+        let defaults = makeDefaults()
+        let previousSessionID = UUID()
+        let currentSessionID = UUID()
+
+        try save(
+            snapshot(
+                tasks: [
+                    FocusTask(
+                        title: "Незавершённая",
+                        sessionID: previousSessionID
+                    )
+                ],
+                currentWorkSessionID: currentSessionID
+            ),
+            to: defaults
+        )
+
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        #expect(store.currentSessionTasks.map(\.title) == ["Незавершённая"])
+        #expect(store.activeTask?.title == "Незавершённая")
     }
 
     @Test("Custom durations reset the paused interval")
@@ -117,6 +146,10 @@ struct PomoTests {
         #expect(store.focusHistory.first?.taskTitle == "Историческая задача")
         #expect(report.sessionCount == 1)
         #expect(report.totalFocusSeconds == 60)
+        #expect(store.currentSessionTasks.map(\.title) == [
+            "Историческая задача"
+        ])
+        #expect(store.taskHistory.isEmpty)
     }
 
     @Test("Legacy completed tasks migrate into task history")
@@ -158,7 +191,8 @@ struct PomoTests {
         activeFocusStartedAt: Date? = nil,
         activeFocusTaskID: UUID? = nil,
         activeFocusTaskTitle: String? = nil,
-        activeFocusPlannedSeconds: TimeInterval? = nil
+        activeFocusPlannedSeconds: TimeInterval? = nil,
+        currentWorkSessionID: UUID? = nil
     ) -> PersistedPomoState {
         PersistedPomoState(
             tasks: tasks,
@@ -178,7 +212,8 @@ struct PomoTests {
             activeFocusStartedAt: activeFocusStartedAt,
             activeFocusTaskID: activeFocusTaskID,
             activeFocusTaskTitle: activeFocusTaskTitle,
-            activeFocusPlannedSeconds: activeFocusPlannedSeconds
+            activeFocusPlannedSeconds: activeFocusPlannedSeconds,
+            currentWorkSessionID: currentWorkSessionID
         )
     }
 

@@ -49,7 +49,7 @@ struct PopoverView: View {
                 .animation(.easeOut(duration: 0.18), value: page)
             }
         }
-        .frame(width: 420, height: 640)
+        .frame(width: 380, height: 560)
         .environment(\.pomoPalette, palette)
         .tint(palette.tomato)
         .preferredColorScheme(store.theme.colorScheme)

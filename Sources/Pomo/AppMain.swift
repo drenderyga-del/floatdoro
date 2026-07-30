@@ -1,6 +1,5 @@
 import AppKit
 import Combine
-import CoreImage
 import SwiftUI
 
 private extension Notification.Name {
@@ -63,11 +62,6 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     private var popover: NSPopover?
     private var previewWindow: NSWindow?
     private lazy var floatingPanelController = FloatingPanelController(store: store)
-    private let statusBlurFilter: CIFilter? = {
-        let filter = CIFilter(name: "CIGaussianBlur")
-        filter?.setValue(10, forKey: kCIInputRadiusKey)
-        return filter
-    }()
     private var subscriptions = Set<AnyCancellable>()
 
     init(previewMode: Bool) {
@@ -134,27 +128,15 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         button.imageHugsTitle = true
         button.toolTip = appText("Floatdoro — открыть таймер", "Floatdoro — open timer")
         button.setAccessibilityLabel(appText("Floatdoro, таймер \(store.displayTime)", "Floatdoro, timer \(store.displayTime)"))
-        configureStatusItemBackdrop(button)
 
         statusItem = item
         configurePopover()
         refreshStatusItem()
     }
 
-    private func configureStatusItemBackdrop(_ button: NSStatusBarButton) {
-        button.wantsLayer = true
-        button.layer?.cornerRadius = 8
-        button.layer?.cornerCurve = .continuous
-        button.layer?.masksToBounds = true
-
-        if let statusBlurFilter {
-            button.layer?.backgroundFilters = [statusBlurFilter]
-        }
-    }
-
     private func configurePopover() {
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 420, height: 640)
+        popover.contentSize = NSSize(width: 380, height: 560)
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
@@ -267,27 +249,17 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
 
         button.image = nil
         button.imagePosition = .noImage
-        button.contentTintColor = .black
+        button.contentTintColor = .labelColor
         button.attributedTitle = NSAttributedString(
             string: store.displayTime,
             attributes: [
                 .font: NSFont.monospacedDigitSystemFont(
                     ofSize: 12.5,
-                    weight: .bold
+                    weight: .medium
                 ),
-                .foregroundColor: NSColor.black
+                .foregroundColor: NSColor.labelColor
             ]
         )
-        button.wantsLayer = true
-        button.layer?.cornerRadius = 11
-        button.layer?.masksToBounds = true
-        button.layer?.backgroundColor = NSColor.white
-            .withAlphaComponent(0.96)
-            .cgColor
-        button.layer?.borderWidth = 0.5
-        button.layer?.borderColor = NSColor.black
-            .withAlphaComponent(0.10)
-            .cgColor
         button.toolTip = "\(store.phaseStatusLabel): \(store.displayTime) — \(store.activeTaskTitle)"
         button.setAccessibilityLabel("Floatdoro. \(store.phaseStatusAccessibilityLabel). \(timerAccessibilityLabel(seconds: store.remainingSeconds))")
     }
@@ -301,7 +273,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         let window = NSWindow(contentViewController: controller)
         window.title = "Floatdoro Preview"
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 420, height: 640))
+        window.setContentSize(NSSize(width: 380, height: 560))
         window.center()
         window.makeKeyAndOrderFront(nil)
         previewWindow = window

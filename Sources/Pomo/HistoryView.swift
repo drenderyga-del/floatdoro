@@ -4,6 +4,7 @@ struct HistoryView: View {
     @ObservedObject var store: TimerStore
 
     @State private var weekOffset = 0
+    @State private var expandedDayIDs: Set<Date> = []
 
     private let calendar = Calendar.current
     private var currentLocale: Locale { AppLanguage.locale }
@@ -22,11 +23,21 @@ struct HistoryView: View {
 
     private var palette: PomoPalette { store.theme.palette }
 
-    private var events: [HistoryEvent] {
-        let sessionEvents = report.sessions.map(HistoryEvent.session)
-        let taskEvents = report.completedTasks.map(HistoryEvent.task)
-        return (sessionEvents + taskEvents).sorted {
-            $0.date > $1.date
+    private var historyDays: [HistoryDay] {
+        let sessionsByDay = Dictionary(grouping: report.sessions) {
+            calendar.startOfDay(for: $0.endedAt)
+        }
+        let tasksByDay = Dictionary(grouping: report.completedTasks) {
+            calendar.startOfDay(for: $0.completedAt)
+        }
+        let dates = Set(sessionsByDay.keys).union(tasksByDay.keys)
+
+        return dates.sorted(by: >).map { date in
+            HistoryDay(
+                date: date,
+                sessions: sessionsByDay[date] ?? [],
+                completedTasks: tasksByDay[date] ?? []
+            )
         }
     }
 
@@ -82,27 +93,42 @@ struct HistoryView: View {
     }
 
     private var summaryPanel: some View {
-        HStack(spacing: 0) {
-            summaryMetric(
-                value: durationLabel(report.totalFocusSeconds),
-                title: appText("работы", "work")
+        VStack(spacing: 12) {
+            HStack(spacing: 0) {
+                summaryMetric(
+                    value: durationLabel(report.totalFocusSeconds),
+                    title: appText("фокус-время", "focus time")
+                )
+
+                summaryDivider
+
+                summaryMetric(
+                    value: "\(report.sessionCount)",
+                    title: appText("интервалы", "intervals")
+                )
+
+                summaryDivider
+
+                summaryMetric(
+                    value: "\(report.completedTaskCount)",
+                    title: appText("выполнено", "completed")
+                )
+            }
+
+            Divider()
+                .overlay(palette.border)
+
+            Text(
+                appText(
+                    "Фокус-время считает полностью завершённые рабочие интервалы. Задача попадает в выполненные только после отметки галочкой.",
+                    "Focus time counts fully completed work intervals. A task counts as completed only after you check it off."
+                )
             )
-
-            summaryDivider
-
-            summaryMetric(
-                value: "\(report.sessionCount)",
-                title: pomodoroLabel(report.sessionCount)
-            )
-
-            summaryDivider
-
-            summaryMetric(
-                value: "\(report.completedTaskCount)",
-                title: taskLabel(report.completedTaskCount)
-            )
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(palette.muted)
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 14)
+        .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(palette.surface)
@@ -138,7 +164,7 @@ struct HistoryView: View {
 
     private var weeklyChart: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(appText("Работа по дням", "Work by day"))
+            Text(appText("Фокус-время по дням", "Focus time by day"))
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(palette.ink)
 
@@ -196,26 +222,99 @@ struct HistoryView: View {
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(fullDateLabel(day.date)), \(durationLabel(day.focusedSeconds)) \(appText("работы", "of work"))"
+            "\(fullDateLabel(day.date)), \(durationLabel(day.focusedSeconds)) \(appText("фокус-времени", "of focus time"))"
         )
     }
 
     private var historyList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(appText("История недели", "Week history"))
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(palette.ink)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(appText("История недели", "Week history"))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(palette.ink)
 
-            if events.isEmpty {
+                Text(
+                    appText(
+                        "Открой день, чтобы увидеть интервалы и завершённые задачи.",
+                        "Open a day to see its intervals and completed tasks."
+                    )
+                )
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(palette.muted)
+            }
+
+            if historyDays.isEmpty {
                 emptyHistory
             } else {
+                VStack(spacing: 8) {
+                    ForEach(historyDays) { day in
+                        historyDayCard(day)
+                    }
+                }
+            }
+        }
+    }
+
+    private func historyDayCard(_ day: HistoryDay) -> some View {
+        let isExpanded = expandedDayIDs.contains(day.id)
+
+        return VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeOut(duration: 0.18)) {
+                    if isExpanded {
+                        expandedDayIDs.remove(day.id)
+                    } else {
+                        expandedDayIDs.insert(day.id)
+                    }
+                }
+            } label: {
+                HStack(spacing: 11) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dayTitle(day.date))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(palette.ink)
+
+                        Text(daySummary(day))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(palette.muted)
+                            .lineLimit(2)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Text(durationLabel(day.focusedSeconds))
+                        .font(.system(size: 11, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.ink)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(palette.muted)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                }
+                .contentShape(Rectangle())
+                .padding(12)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                appText(
+                    "\(dayTitle(day.date)), \(daySummary(day))",
+                    "\(dayTitle(day.date)), \(daySummary(day))"
+                )
+            )
+
+            if isExpanded {
+                Divider()
+                    .overlay(palette.border)
+                    .padding(.horizontal, 12)
+
                 VStack(spacing: 0) {
-                    ForEach(Array(events.enumerated()), id: \.element.id) {
+                    ForEach(Array(day.events.enumerated()), id: \.element.id) {
                         index,
                         event in
                         historyRow(event)
 
-                        if index < events.count - 1 {
+                        if index < day.events.count - 1 {
                             Divider()
                                 .overlay(palette.border)
                                 .padding(.leading, 43)
@@ -223,15 +322,16 @@ struct HistoryView: View {
                     }
                 }
                 .padding(.horizontal, 12)
-                .background {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(palette.surface)
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(palette.border, lineWidth: 1)
-                }
+                .transition(.opacity)
             }
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(palette.surface)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(palette.border, lineWidth: 1)
         }
     }
 
@@ -361,6 +461,16 @@ struct HistoryView: View {
         )
     }
 
+    private func dayTitle(_ date: Date) -> String {
+        calendar.isDateInToday(date)
+            ? appText("Сегодня", "Today")
+            : fullDateLabel(date)
+    }
+
+    private func daySummary(_ day: HistoryDay) -> String {
+        "\(intervalCountLabel(day.sessions.count)) · \(taskCountLabel(day.completedTasks.count))"
+    }
+
     private func durationLabel(_ seconds: TimeInterval) -> String {
         let minutes = Int(seconds / 60)
         if minutes >= 60 {
@@ -377,12 +487,53 @@ struct HistoryView: View {
         "\(Int(seconds / 60))"
     }
 
-    private func pomodoroLabel(_ count: Int) -> String {
-        AppLanguage.isRussian ? (count == 1 ? "сессия" : "сессий") : (count == 1 ? "session" : "sessions")
+    private func intervalCountLabel(_ count: Int) -> String {
+        localizedCount(
+            count,
+            russianOne: "интервал",
+            russianFew: "интервала",
+            russianMany: "интервалов",
+            englishOne: "interval",
+            englishMany: "intervals"
+        )
     }
 
-    private func taskLabel(_ count: Int) -> String {
-        AppLanguage.isRussian ? (count == 1 ? "задача" : "задач") : (count == 1 ? "task" : "tasks")
+    private func taskCountLabel(_ count: Int) -> String {
+        localizedCount(
+            count,
+            russianOne: "задача",
+            russianFew: "задачи",
+            russianMany: "задач",
+            englishOne: "task",
+            englishMany: "tasks"
+        )
+    }
+
+    private func localizedCount(
+        _ count: Int,
+        russianOne: String,
+        russianFew: String,
+        russianMany: String,
+        englishOne: String,
+        englishMany: String
+    ) -> String {
+        guard AppLanguage.isRussian else {
+            return "\(count) \(count == 1 ? englishOne : englishMany)"
+        }
+
+        let remainder100 = count % 100
+        let remainder10 = count % 10
+        let noun: String
+        if remainder10 == 1, remainder100 != 11 {
+            noun = russianOne
+        } else if (2...4).contains(remainder10),
+            !(12...14).contains(remainder100)
+        {
+            noun = russianFew
+        } else {
+            noun = russianMany
+        }
+        return "\(count) \(noun)"
     }
 }
 
@@ -418,7 +569,7 @@ private enum HistoryEvent: Identifiable {
     var detail: String {
         switch self {
         case .session(let session):
-            appText("\(Int(session.focusedSeconds / 60)) мин · сессия завершена", "\(Int(session.focusedSeconds / 60)) min · session complete")
+            appText("\(Int(session.focusedSeconds / 60)) мин · рабочий интервал", "\(Int(session.focusedSeconds / 60)) min · work interval")
         case .task:
             appText("Задача завершена", "Task completed")
         }
@@ -434,5 +585,23 @@ private enum HistoryEvent: Identifiable {
     var isFocus: Bool {
         if case .session = self { return true }
         return false
+    }
+}
+
+private struct HistoryDay: Identifiable {
+    let date: Date
+    let sessions: [FocusSessionRecord]
+    let completedTasks: [CompletedTaskRecord]
+
+    var id: Date { date }
+
+    var focusedSeconds: TimeInterval {
+        sessions.reduce(0) { $0 + $1.focusedSeconds }
+    }
+
+    var events: [HistoryEvent] {
+        let sessionEvents = sessions.map(HistoryEvent.session)
+        let taskEvents = completedTasks.map(HistoryEvent.task)
+        return (sessionEvents + taskEvents).sorted { $0.date > $1.date }
     }
 }

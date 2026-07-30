@@ -32,7 +32,7 @@ Use the macOS system family throughout. The countdown uses SF Rounded with monos
 
 Type roles:
 
-- Menu-bar countdown: 14 pt bold, monospaced digits.
+- Menu-bar countdown: 12.5 pt medium, monospaced digits.
 - Floating countdown: 34 pt bold, rounded, monospaced digits.
 - Popover countdown: 64 pt bold, rounded, monospaced digits.
 - Section heading: 13 pt semibold.
@@ -45,17 +45,21 @@ Use a 4-point base scale: 4, 8, 12, 16, 24, and 32 points. Related controls grou
 
 ## Components
 
-### Menu-bar pill
+### Menu-bar countdown
 
-A fixed-width dark capsule containing a timer glyph and `MM:SS`. The timer remains legible against light and dark menu-bar backgrounds. The item uses the maximum practical height allowed by macOS and expands horizontally instead of fighting system geometry.
+A 56-point fixed-width, text-only `MM:SS` item using the native menu-bar background and dynamic system label color. It intentionally occupies about two standard icon slots on notched MacBook displays. Phase and task details stay in the tooltip and popover instead of widening the item.
 
 ### Floating reminder
 
-A draggable, always-on-top, freely resizable reminder. The user can pull any window edge or corner from 380×290 through 920×800 points. Compact layouts prioritize oversized clock digits, the current task, segmented progress, and three labeled actions: Start/Pause, Done, and Next. Once height reaches 470 points, the complete task queue appears automatically. The first unfinished task receives a sage wash, full hairline border, and a `СЕЙЧАС` label; color is never the only signal.
+A draggable, always-on-top, freely resizable reminder. It opens at 390×440 points and can be resized from 340×360 through 860×820 points. Compact layouts prioritize oversized clock digits, the current task, segmented progress, and the primary controls. The task queue appears when the available height allows it; color is never the only signal.
 
 ### Popover
 
-A focused 420×640 point surface. The countdown sits on a raised clock-like instrument panel with segmented progress; the task queue and add-task field occupy the lower half. Settings replace the main content in place rather than opening a modal and include a light/dark theme selector.
+A focused 380×560 point surface sized for a 14-inch MacBook display. The countdown remains the strongest landmark while task entry and the queue stay visible below it. Settings and history replace the main content in place and scroll within the same compact surface.
+
+### Weekly history
+
+The weekly summary names its three inputs explicitly: completed focus time, completed work intervals, and checked-off tasks. The chart groups focus time by the day an interval ends. History is grouped into expandable days; each day reveals its work intervals and completed tasks without opening a modal.
 
 ### Buttons
 

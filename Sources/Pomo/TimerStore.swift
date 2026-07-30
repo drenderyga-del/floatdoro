@@ -49,7 +49,7 @@ final class TimerStore: ObservableObject {
             currentWorkSessionID = restoredWorkSessionID
             tasks = snapshot.tasks.map { task in
                 var task = task
-                if task.sessionID == nil {
+                if !task.isCompleted || task.sessionID == nil {
                     task.sessionID = restoredWorkSessionID
                 }
                 return task
@@ -482,7 +482,11 @@ final class TimerStore: ObservableObject {
     }
 
     private func beginNextWorkSession() {
-        currentWorkSessionID = UUID()
+        let nextWorkSessionID = UUID()
+        for index in tasks.indices where !tasks[index].isCompleted {
+            tasks[index].sessionID = nextWorkSessionID
+        }
+        currentWorkSessionID = nextWorkSessionID
     }
 
     private func requestNotificationPermissionIfNeeded() {
