@@ -35,6 +35,9 @@ nav {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--ink);
   font-size: 18px;
   font-weight: 750;
@@ -61,6 +64,45 @@ main a {
 
 .intro {
   margin-bottom: 56px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.primary-action,
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 19px;
+  border-radius: 13px;
+  text-decoration: none;
+}
+
+main .primary-action {
+  background: var(--ink);
+  color: white;
+}
+
+main .secondary-action {
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.product-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 54px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgb(23 34 20 / 12%);
 }
 
 h1 {

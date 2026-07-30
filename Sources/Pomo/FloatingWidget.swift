@@ -663,7 +663,7 @@ final class FloatingPanelController {
     }
 
     private func makePanel() -> NSPanel {
-        let defaultSize = NSSize(width: 448, height: 500)
+        let defaultSize = NSSize(width: 390, height: 440)
         let panel = TopMovablePanel(
             contentRect: NSRect(origin: .zero, size: defaultSize),
             styleMask: [
@@ -687,7 +687,7 @@ final class FloatingPanelController {
         panel.isMovableByWindowBackground = true
         panel.animationBehavior = .utilityWindow
         panel.isReleasedWhenClosed = false
-        panel.minSize = NSSize(width: 360, height: 400)
+        panel.minSize = NSSize(width: 340, height: 360)
         panel.maxSize = NSSize(width: 860, height: 820)
         panel.standardWindowButton(.closeButton)?.isHidden = true
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
@@ -703,7 +703,7 @@ final class FloatingPanelController {
 
         if
             let screen = NSScreen.main,
-            !panel.setFrameUsingName("PomoFloatingPanelGlassV7")
+            !panel.setFrameUsingName("PomoFloatingPanelGlassV8")
         {
             let visible = screen.visibleFrame
             let origin = NSPoint(
@@ -712,7 +712,7 @@ final class FloatingPanelController {
             )
             panel.setFrameOrigin(origin)
         }
-        panel.setFrameAutosaveName("PomoFloatingPanelGlassV7")
+        panel.setFrameAutosaveName("PomoFloatingPanelGlassV8")
         return panel
     }
 }

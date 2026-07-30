@@ -121,7 +121,10 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureMenuBar() {
-        let item = NSStatusBar.system.statusItem(withLength: 108)
+        // Keep the countdown close to the width of two regular menu bar icons.
+        // This matters on notched MacBook displays where horizontal space is
+        // significantly more constrained.
+        let item = NSStatusBar.system.statusItem(withLength: 56)
         guard let button = item.button else { return }
 
         button.target = self
@@ -266,10 +269,10 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         button.imagePosition = .noImage
         button.contentTintColor = .black
         button.attributedTitle = NSAttributedString(
-            string: " \(store.phaseStatusLabel) · \(store.displayTime) ",
+            string: store.displayTime,
             attributes: [
                 .font: NSFont.monospacedDigitSystemFont(
-                    ofSize: 13,
+                    ofSize: 12.5,
                     weight: .bold
                 ),
                 .foregroundColor: NSColor.black
