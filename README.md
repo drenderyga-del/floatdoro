@@ -6,6 +6,15 @@ Floatdoro is a native, local-first focus timer for macOS. It lives in the menu
 bar and can keep a compact, resizable timer above your other windows while you
 work.
 
+## Install
+
+1. Open the [latest GitHub Release](https://github.com/drenderyga-del/floatdoro/releases/latest).
+2. Download the macOS ZIP file from **Assets**.
+3. Unpack the ZIP and move the application to the Applications folder.
+4. Open the application and look for its countdown in the macOS menu bar.
+
+Release builds are signed and notarized by Apple.
+
 ## Features
 
 - Menu bar countdown with quick timer controls
@@ -17,7 +26,9 @@ work.
 - System notifications, completion sounds, and optional launch at login
 - Local storage with no account, analytics, advertising, or tracking
 
-## Requirements
+## Build from source
+
+### Requirements
 
 - macOS 14 Sonoma or newer
 - Xcode Command Line Tools or Xcode with Swift 6
@@ -28,7 +39,7 @@ Install the command-line tools if they are not already available:
 xcode-select --install
 ```
 
-## Run from source
+### Run
 
 Clone the repository and launch Floatdoro with Swift Package Manager:
 
@@ -41,7 +52,7 @@ swift run Floatdoro
 Floatdoro is a menu bar utility, so it does not show an icon in the Dock. Look
 for the countdown in the macOS menu bar after launching it.
 
-## Build the macOS application
+### Create an application bundle
 
 Create a local `.app` bundle:
 
@@ -60,7 +71,7 @@ To set a custom version:
 ./scripts/package_app.sh 1.0.0
 ```
 
-## Develop in Xcode
+### Develop in Xcode
 
 The Xcode project is generated from `project.yml` using
 [XcodeGen](https://github.com/yonaskolb/XcodeGen):
@@ -73,7 +84,7 @@ open Floatdoro.xcodeproj
 
 Choose the `Floatdoro` scheme and run the app on `My Mac`.
 
-## Tests
+### Tests
 
 Run the test suite with:
 
