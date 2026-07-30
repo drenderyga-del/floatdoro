@@ -2,69 +2,104 @@
 
 ![Floatdoro](assets/floatdoro-github-cover.png)
 
-A native, local-first Pomodoro timer that stays visible above your work.
+Floatdoro is a native, local-first focus timer for macOS. It lives in the menu
+bar and can keep a compact, resizable timer above your other windows while you
+work.
 
 ## Features
 
-- Wide countdown pill in the menu bar
-- Large draggable floating reminder above other windows
-- Freely resizable reminder; the task list appears as the window grows
-- White/olive light theme by default with an optional dark theme
-- Focus and break durations with 25/5, 50/10, and 90/20 presets
-- Lightweight task queue; completing the active task promotes the next
-- Sleep-safe countdown based on an absolute end date
-- Local persistence, system notifications, and optional launch at login
-- No account, analytics, or network access
+- Menu bar countdown with quick timer controls
+- Floating timer that stays above other windows and across workspaces
+- Resizable floating panel with the current task and task queue
+- 25/5, 50/10, and 90/20 presets plus custom focus and break durations
+- Lightweight task queue and weekly focus history
+- Light and dark appearances
+- System notifications, completion sounds, and optional launch at login
+- Local storage with no account, analytics, advertising, or tracking
 
-## Build
+## Requirements
 
-Requires macOS 14 or newer and Xcode Command Line Tools.
+- macOS 14 Sonoma or newer
+- Xcode Command Line Tools or Xcode with Swift 6
+
+Install the command-line tools if they are not already available:
 
 ```sh
-swift test
+xcode-select --install
+```
+
+## Run from source
+
+Clone the repository and launch Floatdoro with Swift Package Manager:
+
+```sh
+git clone https://github.com/drenderyga-del/floatdoro.git
+cd floatdoro
+swift run Floatdoro
+```
+
+Floatdoro is a menu bar utility, so it does not show an icon in the Dock. Look
+for the countdown in the macOS menu bar after launching it.
+
+## Build the macOS application
+
+Create a local `.app` bundle:
+
+```sh
 ./scripts/package_app.sh
 open outputs/Floatdoro.app
 ```
 
-The packaged application is written to `outputs/Floatdoro.app`.
+The application is written to `outputs/Floatdoro.app` and receives an ad-hoc
+signature suitable for local use. To install it, move `Floatdoro.app` to the
+Applications folder.
 
-## TestFlight
-
-Generate the Xcode project, archive the Mac App Store build, and upload it to
-App Store Connect:
-
-```sh
-./scripts/upload_testflight.sh 1.0.0 1
-```
-
-The Store build uses App Sandbox, automatic signing, and the
-`io.github.drenderyga-del.floatdoro` bundle identifier.
-
-## Release
-
-Push a version tag to create a GitHub Release with a ready-to-download application archive:
+To set a custom version:
 
 ```sh
-git tag v1.0.1
-git push origin v1.0.1
+./scripts/package_app.sh 1.0.0
 ```
 
-The release contains `Floatdoro-<version>-macos.zip`, which holds `Floatdoro.app`, and a matching SHA-256 checksum. Download the ZIP, unpack it, and move the app to Applications.
+## Develop in Xcode
 
-Published builds are signed with a Developer ID certificate, notarized by Apple, and
-have the notarization ticket stapled to the application bundle.
+The Xcode project is generated from `project.yml` using
+[XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
-The release workflow expects these GitHub Actions secrets:
+```sh
+brew install xcodegen
+xcodegen generate
+open Floatdoro.xcodeproj
+```
 
-- `DEVELOPER_ID_CERTIFICATE_P12` — base64-encoded Developer ID Application certificate and private key
-- `DEVELOPER_ID_CERTIFICATE_PASSWORD` — password used when exporting the `.p12`
-- `APP_STORE_CONNECT_API_KEY_P8` — base64-encoded App Store Connect API private key
-- `APP_STORE_CONNECT_API_KEY_ID` — API key ID
-- `APP_STORE_CONNECT_API_ISSUER_ID` — API issuer ID
+Choose the `Floatdoro` scheme and run the app on `My Mac`.
 
-## Compatibility
+## Tests
 
-- macOS 14 Sonoma or newer
-- Apple Silicon Macs (M1 or newer)
+Run the test suite with:
 
-The release is built as an arm64 application. Intel Mac support is not included yet.
+```sh
+swift test
+```
+
+The tests cover timer behavior, task progression, focus history, custom
+durations, floating-window visibility, and migration of existing local data.
+
+## Project structure
+
+- `Sources/Pomo` — application source code
+- `Tests/PomoTests` — automated tests
+- `Resources` — app icon, entitlements, privacy manifest, and `Info.plist`
+- `scripts/package_app.sh` — local `.app` bundle builder
+- `project.yml` — XcodeGen project configuration
+
+## Local data and privacy
+
+Timer state, tasks, preferences, and focus history are stored locally on the
+Mac. Floatdoro does not require an account and does not include analytics,
+advertising, tracking, or third-party SDKs.
+
+## Contributing
+
+Bug reports and pull requests are welcome. When changing behavior, add or
+update tests where practical and run `swift test` before opening a pull
+request.
