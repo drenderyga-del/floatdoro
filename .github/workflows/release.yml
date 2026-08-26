@@ -97,10 +97,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          NOTES=$'## Compatibility\n\n- macOS 14 Sonoma or newer\n- Apple Silicon Macs (M1 or newer)\n- Signed with Developer ID and notarized by Apple\n\nDownload the ZIP, unpack `Floatdoro.app`, and move it to Applications.'
+          NOTES_PATH="app-store/release-notes/${TAG#v}/github.md"
+          test -f "$NOTES_PATH"
           gh release create "$TAG" \
             "outputs/release/Floatdoro-${TAG#v}-macos.zip" \
             "outputs/release/Floatdoro-${TAG#v}-macos.zip.sha256" \
             --title "Floatdoro ${TAG#v}" \
-            --notes "$NOTES" \
-            --generate-notes
+            --notes-file "$NOTES_PATH"

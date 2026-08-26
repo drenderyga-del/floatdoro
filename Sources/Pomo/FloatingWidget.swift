@@ -26,7 +26,7 @@ struct FloatingWidgetView: View {
     private var palette: PomoPalette { store.theme.palette }
 
     private var unfinishedTasks: [FocusTask] {
-        store.currentSessionTasks.filter { !$0.isCompleted }
+        store.unfinishedTasks
     }
 
     private var nextTask: FocusTask? {
@@ -113,12 +113,12 @@ struct FloatingWidgetView: View {
 
             HStack(spacing: 7) {
                 Circle()
-                    .fill(palette.tomato)
+                    .fill(phaseColor)
                     .frame(width: 9, height: 9)
 
                 Text(store.phaseStatusLabel)
                     .font(.system(size: compact ? 13 : 14, weight: .semibold))
-                    .foregroundStyle(palette.tomato)
+                    .foregroundStyle(phaseColor)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(store.phaseStatusAccessibilityLabel)
@@ -129,12 +129,20 @@ struct FloatingWidgetView: View {
     @ViewBuilder
     private func verticalContent(size: CGSize) -> some View {
         let dense = size.height < 360
-        let expandedQueue = store.isFloatingExpanded && size.height >= 340
-        let showsNext = !expandedQueue && size.height >= 390
+        // A break deliberately never expands the work queue. The next focus
+        // task can be previewed below, but no work task is presented as an
+        // active break item.
+        let expandedQueue =
+            store.phase == .focus && store.isFloatingExpanded && size.height >= 340
+        let showsNext =
+            store.phase == .focus && !expandedQueue && size.height >= 390
         let showsFooter = size.height >= 350
 
         VStack(spacing: dense ? 7 : 11) {
-            timerScale(compact: dense)
+            timerScale(
+                compact: dense,
+                showsScaleLabels: size.height >= 330
+            )
 
             taskPanel(
                 expanded: expandedQueue,
@@ -162,7 +170,10 @@ struct FloatingWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    private func timerScale(compact: Bool) -> some View {
+    private func timerScale(
+        compact: Bool,
+        showsScaleLabels: Bool
+    ) -> some View {
         VStack(spacing: compact ? 5 : 8) {
             Text(store.displayTime)
                 .font(
@@ -194,17 +205,19 @@ struct FloatingWidgetView: View {
             .frame(height: compact ? 10 : 13)
             .padding(.top, compact ? 3 : 7)
 
-            HStack {
-                Text("0")
-                Spacer()
-                Text(timerDisplay(seconds: store.durationSeconds / 2))
-                Spacer()
-                Text(timerDisplay(seconds: store.durationSeconds))
+            if showsScaleLabels {
+                HStack {
+                    Text("0")
+                    Spacer()
+                    Text(timerDisplay(seconds: store.durationSeconds / 2))
+                    Spacer()
+                    Text(timerDisplay(seconds: store.durationSeconds))
+                }
+                .font(.system(size: compact ? 10 : 11, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(palette.muted)
+                .frame(maxWidth: 380)
             }
-            .font(.system(size: compact ? 10 : 11, weight: .medium))
-            .monospacedDigit()
-            .foregroundStyle(palette.muted)
-            .frame(maxWidth: 380)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
@@ -273,7 +286,11 @@ struct FloatingWidgetView: View {
                     .scrollIndicators(.never)
                 }
             } else {
-                Text(appText("Текущая задача", "Current task"))
+                Text(
+                    store.phase == .focus
+                        ? appText("Текущая задача", "Current task")
+                        : appText("Следующая задача фокуса", "Next focus task")
+                )
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(palette.muted)
 
@@ -284,6 +301,15 @@ struct FloatingWidgetView: View {
                         isQuiet: false,
                         action: {
                             store.completeCurrentTask()
+                        }
+                    )
+                } else if let task = store.focusTask {
+                    GlassTaskRow(
+                        task: task,
+                        isActive: false,
+                        isQuiet: true,
+                        action: {
+                            store.toggleTask(id: task.id)
                         }
                     )
                 } else {
@@ -338,6 +364,10 @@ struct FloatingWidgetView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(palette.raised.opacity(0.92))
         }
+    }
+
+    private var phaseColor: Color {
+        store.phase == .focus ? palette.tomato : palette.breakGreen
     }
 
     private func actionBar(compact: Bool) -> some View {
@@ -697,6 +727,10 @@ final class FloatingPanelController {
         let hostingView = DraggableHostingView(
             rootView: FloatingWidgetView(store: store)
         )
+        // The view uses GeometryReader and must follow the panel's size. Do
+        // not let AppKit derive a new window size from a transient SwiftUI
+        // layout pass when the queue expands, collapses, or changes phase.
+        hostingView.sizingOptions = []
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         panel.contentView = hostingView

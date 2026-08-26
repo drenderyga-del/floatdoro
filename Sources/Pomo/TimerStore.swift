@@ -16,6 +16,7 @@ final class TimerStore: ObservableObject {
     @Published private(set) var focusHistory: [FocusSessionRecord]
     @Published private(set) var taskHistory: [CompletedTaskRecord]
     @Published private(set) var isFloatingVisible: Bool
+    @Published private(set) var autoStartBreak: Bool
     @Published private(set) var isFloatingExpanded: Bool
     @Published private(set) var soundEnabled: Bool
     @Published private(set) var theme: PomoThemeMode
@@ -77,6 +78,7 @@ final class TimerStore: ObservableObject {
                 )
             }
             isFloatingVisible = snapshot.isFloatingVisible
+            autoStartBreak = snapshot.autoStartBreak ?? false
             isFloatingExpanded = snapshot.isFloatingExpanded ?? false
             soundEnabled = snapshot.soundEnabled
             theme = snapshot.theme ?? .light
@@ -97,7 +99,8 @@ final class TimerStore: ObservableObject {
             completedSessions = 0
             focusHistory = []
             taskHistory = []
-            isFloatingVisible = true
+            isFloatingVisible = false
+            autoStartBreak = false
             isFloatingExpanded = false
             soundEnabled = true
             theme = .light
@@ -168,8 +171,24 @@ final class TimerStore: ObservableObject {
             : restStatusLabel
     }
 
+    /// The durable task queue. Tasks stay here until the user explicitly
+    /// completes or deletes them, irrespective of Pomodoro interval changes.
+    var unfinishedTasks: [FocusTask] {
+        tasks.filter { !$0.isCompleted }
+    }
+
+    /// The task that will be worked on when the next focus interval starts.
+    /// This intentionally remains available during a break so the queue can
+    /// describe what is next without treating it as a break task.
+    var focusTask: FocusTask? {
+        unfinishedTasks.first
+    }
+
+    /// A task is active only while the timer is in a focus interval. Keeping
+    /// this phase-aware prevents a work task from being presented as the task
+    /// of a break.
     var activeTask: FocusTask? {
-        currentSessionTasks.first(where: { !$0.isCompleted })
+        phase == .focus ? focusTask : nil
     }
 
     var currentSessionTasks: [FocusTask] {
@@ -262,7 +281,6 @@ final class TimerStore: ObservableObject {
         }
         endDate = now.addingTimeInterval(pausedSeconds)
         isRunning = true
-        isFloatingVisible = true
         requestNotificationPermissionIfNeeded()
         persist()
     }
@@ -379,6 +397,11 @@ final class TimerStore: ObservableObject {
         persist()
     }
 
+    func setAutoStartBreak(_ enabled: Bool) {
+        autoStartBreak = enabled
+        persist()
+    }
+
     func setFloatingExpanded(_ expanded: Bool) {
         isFloatingExpanded = expanded
         persist()
@@ -448,12 +471,15 @@ final class TimerStore: ObservableObject {
             recordCompletedFocus(endedAt: completedAt)
         }
 
-        isRunning = false
-        endDate = nil
         phase = completedPhase == .focus ? .breakTime : .focus
         if completedPhase == .focus {
             beginNextWorkSession()
         }
+        let shouldStartBreak = completedPhase == .focus && autoStartBreak
+        isRunning = shouldStartBreak
+        endDate = shouldStartBreak
+            ? completedAt.addingTimeInterval(durationSeconds)
+            : nil
         pausedSeconds = durationSeconds
         now = Date()
         completionPulse += 1
@@ -523,7 +549,7 @@ final class TimerStore: ObservableObject {
             content.body = appText("Время сделать перерыв.", "Time for a break.")
         } else {
             content.title = appText("Перерыв закончен", "Break complete")
-            content.body = activeTask.map { appText("Следующая задача: \($0.title)", "Next task: \($0.title)") }
+            content.body = focusTask.map { appText("Следующая задача: \($0.title)", "Next task: \($0.title)") }
                 ?? appText("Можно начинать: \(resolvedWorkStatusLabel.lowercased()).", "Ready for \(resolvedWorkStatusLabel.lowercased()).")
         }
         if soundEnabled {
@@ -549,6 +575,7 @@ final class TimerStore: ObservableObject {
             breakMinutes: breakMinutes,
             completedSessions: completedSessions,
             isFloatingVisible: isFloatingVisible,
+            autoStartBreak: autoStartBreak,
             soundEnabled: soundEnabled,
             theme: theme,
             isFloatingExpanded: isFloatingExpanded,

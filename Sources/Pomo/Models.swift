@@ -141,6 +141,7 @@ struct PersistedPomoState: Codable, Sendable {
     var breakMinutes: Int
     var completedSessions: Int
     var isFloatingVisible: Bool
+    var autoStartBreak: Bool?
     var soundEnabled: Bool
     var theme: PomoThemeMode?
     var isFloatingExpanded: Bool?

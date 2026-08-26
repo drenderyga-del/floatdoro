@@ -21,6 +21,7 @@ Release builds are signed and notarized by Apple.
 - Floating timer that stays above other windows and across workspaces
 - Resizable floating panel with the current task and task queue
 - 25/5, 50/10, and 90/20 presets plus custom focus and break durations
+- Optional automatic break start when a focus interval ends
 - Lightweight task queue and weekly focus history
 - Light and dark appearances
 - System notifications, completion sounds, and optional launch at login
@@ -94,6 +95,21 @@ swift test
 
 The tests cover timer behavior, task progression, focus history, custom
 durations, floating-window visibility, and migration of existing local data.
+The Xcode project also contains the same test target, so the release scheme
+executes the tests through `xcodebuild` as well.
+
+### App Store release preflight
+
+Before creating an archive or uploading to TestFlight, run the preflight with
+the exact marketing version and build number:
+
+```sh
+./scripts/preflight_release.sh 1.0.1 7
+```
+
+This runs both Swift Package and Xcode tests, regenerates the Xcode project,
+and validates the Info.plist, privacy manifest, entitlements, and export
+options. It does not upload anything to App Store Connect.
 
 ## Project structure
 

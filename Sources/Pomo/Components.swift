@@ -272,6 +272,8 @@ struct SettingsToggleRow: View {
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .tint(palette.tomato)
+                .accessibilityLabel(title)
+                .accessibilityHint(detail)
         }
     }
 }

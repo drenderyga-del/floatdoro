@@ -41,7 +41,8 @@ struct PomoTests {
 
         store.skipToNextPhase()
         #expect(store.currentSessionTasks.map(\.title) == ["Вторая"])
-        #expect(store.activeTask?.title == "Вторая")
+        #expect(store.activeTask == nil)
+        #expect(store.focusTask?.title == "Вторая")
 
         store.addTask(title: "Новая сессия")
         #expect(store.currentSessionTasks.map(\.title) == [
@@ -86,8 +87,8 @@ struct PomoTests {
         #expect(store.remainingSeconds == 3_000)
     }
 
-    @Test("Starting a focus reveals the floating window")
-    func startingFocusShowsFloatingWindow() {
+    @Test("Starting a focus does not open the floating window")
+    func startingFocusPreservesFloatingWindowVisibility() {
         let defaults = makeDefaults()
         let store = TimerStore(defaults: defaults, startsTicker: false)
 
@@ -95,7 +96,61 @@ struct PomoTests {
         store.start()
 
         #expect(store.isRunning)
-        #expect(store.isFloatingVisible)
+        #expect(!store.isFloatingVisible)
+    }
+
+    @Test("Auto-start break begins a running break after focus expires")
+    func autoStartsBreakAfterFocusExpires() throws {
+        let defaults = makeDefaults()
+        let endedAt = Date().addingTimeInterval(-5)
+
+        try save(
+            snapshot(
+                phase: .focus,
+                isRunning: true,
+                endDate: endedAt,
+                pausedSeconds: 0,
+                focusMinutes: 1,
+                breakMinutes: 10,
+                autoStartBreak: true,
+                activeFocusStartedAt: endedAt.addingTimeInterval(-60),
+                activeFocusPlannedSeconds: 60
+            ),
+            to: defaults
+        )
+
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        #expect(store.phase == .breakTime)
+        #expect(store.isRunning)
+        #expect(store.endDate != nil)
+        #expect(store.remainingSeconds > 0)
+        #expect(store.remainingSeconds <= 10 * 60)
+    }
+
+    @Test("Auto-start break setting is persisted")
+    func persistsAutoStartBreakSetting() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        #expect(!store.autoStartBreak)
+        store.setAutoStartBreak(true)
+
+        let restoredStore = TimerStore(defaults: defaults, startsTicker: false)
+        #expect(restoredStore.autoStartBreak)
+    }
+
+    @Test("Skipping a focus does not auto-start a break")
+    func skippingFocusKeepsBreakPaused() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        store.setAutoStartBreak(true)
+        store.skipToNextPhase()
+
+        #expect(store.phase == .breakTime)
+        #expect(!store.isRunning)
+        #expect(store.remainingSeconds == 5 * 60)
     }
 
     @Test("Break mode hides the previous work task title")
@@ -111,6 +166,35 @@ struct PomoTests {
             store.activeTaskTitle
                 == appText("Можно выдохнуть", "Take a breather")
         )
+        #expect(store.activeTask == nil)
+        #expect(store.focusTask?.title == "Рабочая задача")
+        #expect(store.unfinishedTasks.map(\.title) == ["Рабочая задача"])
+    }
+
+    @Test("A break keeps open work tasks in the durable queue")
+    func breakKeepsOpenTasksQueuedForFocus() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+
+        store.addTask(title: "Продолжить документ")
+        store.addTask(title: "Отправить итог")
+        store.skipToNextPhase()
+
+        #expect(store.phase == .breakTime)
+        #expect(store.activeTask == nil)
+        #expect(store.unfinishedTasks.map(\.title) == [
+            "Продолжить документ",
+            "Отправить итог"
+        ])
+
+        store.skipToNextPhase()
+
+        #expect(store.phase == .focus)
+        #expect(store.activeTask?.title == "Продолжить документ")
+        #expect(store.unfinishedTasks.map(\.title) == [
+            "Продолжить документ",
+            "Отправить итог"
+        ])
     }
 
     @Test("Preview settings do not touch system launch at login")
@@ -215,6 +299,7 @@ struct PomoTests {
         focusMinutes: Int = 25,
         breakMinutes: Int = 5,
         completedSessions: Int = 0,
+        autoStartBreak: Bool? = false,
         focusHistory: [FocusSessionRecord]? = [],
         taskHistory: [CompletedTaskRecord]? = [],
         activeFocusStartedAt: Date? = nil,
@@ -233,6 +318,7 @@ struct PomoTests {
             breakMinutes: breakMinutes,
             completedSessions: completedSessions,
             isFloatingVisible: false,
+            autoStartBreak: autoStartBreak,
             soundEnabled: false,
             theme: .light,
             isFloatingExpanded: false,

@@ -116,9 +116,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
             configureMenuBar()
-            let shouldShowFocusWindow = store.isRunning
-            store.setFloatingVisible(shouldShowFocusWindow)
-            floatingPanelController.setVisible(shouldShowFocusWindow)
+            floatingPanelController.setVisible(store.isFloatingVisible)
         }
 
         if !previewMode {
@@ -143,28 +141,27 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         hasVisibleWindows flag: Bool
     ) -> Bool {
         guard !previewMode else { return true }
-        if store.isRunning {
-            store.setFloatingVisible(true)
-            floatingPanelController.setVisible(true)
-        } else {
-            showPopover()
-        }
+        showPopover()
         return true
     }
 
     private func configureMenuBar() {
-        // Keep the countdown close to the width of two regular menu bar icons.
-        // This matters on notched MacBook displays where horizontal space is
-        // significantly more constrained.
-        let item = NSStatusBar.system.statusItem(withLength: 56)
+        // Let AppKit size the item from its title so the countdown cannot be
+        // clipped by a fixed status-item width on different menu-bar layouts.
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         guard let button = item.button else { return }
 
         button.target = self
         button.action = #selector(handleStatusItemClick(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         button.imagePosition = .imageLeading
-        button.imageHugsTitle = true
-        button.toolTip = appText("Floatdoro — открыть таймер", "Floatdoro — open timer")
+        button.imageHugsTitle = false
+        button.alignment = .center
+        item.isVisible = true
+        button.toolTip = appText(
+            "Floatdoro — нажмите, чтобы открыть таймер; нажмите правой кнопкой для меню",
+            "Floatdoro — click to open the timer; right-click for the menu"
+        )
         button.setAccessibilityLabel(appText("Floatdoro, таймер \(store.displayTime)", "Floatdoro, timer \(store.displayTime)"))
 
         statusItem = item
@@ -222,6 +219,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: ""
         )
         floatingItem.target = self
+        floatingItem.state = store.isFloatingVisible ? .on : .off
         menu.addItem(floatingItem)
 
         menu.addItem(.separator())
@@ -287,7 +285,9 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
 
         button.image = nil
         button.imagePosition = .noImage
+        button.alignment = .center
         button.contentTintColor = .labelColor
+        button.title = store.displayTime
         button.attributedTitle = NSAttributedString(
             string: store.displayTime,
             attributes: [

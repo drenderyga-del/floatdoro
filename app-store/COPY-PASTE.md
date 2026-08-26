@@ -5,8 +5,8 @@
 - App name: `Floatdoro`
 - Bundle ID: `io.github.drenderyga-del.floatdoro`
 - SKU: `floatdoro-macos-2026`
-- Version: `1.0.0`
-- Build: `2`
+- Version: `1.0.1`
+- Build: `7`
 - Primary language: English (U.S.)
 - Primary category: Productivity
 - Secondary category: Utilities
@@ -18,6 +18,13 @@
 - Support URL: `https://drenderyga-del.github.io/floatdoro/support.html`
 - Marketing URL: `https://drenderyga-del.github.io/floatdoro/`
 - Privacy Policy URL: `https://drenderyga-del.github.io/floatdoro/privacy.html`
+
+## What's New — 1.0.1
+
+Paste the localized release notes from:
+
+- English (U.S.): `app-store/release-notes/1.0.1/en-US.txt`
+- Russian: `app-store/release-notes/1.0.1/ru.txt`
 
 ---
 
@@ -85,7 +92,7 @@ pomodoro,focus,timer,productivity,menu bar,tasks,work,study,countdown
 ```text
 Floatdoro is a menu bar utility and does not show a Dock icon.
 
-Click the Floatdoro timer in the macOS menu bar to open the main panel. Start a focus interval to display the floating timer above other windows. The floating panel can be dragged and resized.
+Click the Floatdoro timer in the macOS menu bar to open the main panel. Use the floating-window button in the panel header or the status-item menu to show the floating timer above other windows. Starting a focus interval does not open that panel automatically. The floating panel can be dragged and resized.
 
 No account, network connection, purchase, or demo credentials are required. All user data is stored locally in the app sandbox.
 
@@ -164,7 +171,7 @@ Floatdoro — это лаконичный Pomodoro-таймер для Mac, ко
 ```text
 Floatdoro работает в строке меню и не показывает значок в Dock.
 
-Нажмите на таймер Floatdoro в строке меню macOS, чтобы открыть основную панель. Запустите рабочий интервал, чтобы показать плавающий таймер поверх других окон. Плавающую панель можно перемещать и изменять её размер.
+Нажмите на таймер Floatdoro в строке меню macOS, чтобы открыть основную панель. Используйте кнопку плавающего окна в заголовке панели или пункт меню статуса, чтобы показать таймер поверх других окон. Запуск рабочего интервала сам по себе не открывает эту панель. Плавающую панель можно перемещать и изменять её размер.
 
 Аккаунт, подключение к интернету, покупка и тестовые данные для входа не требуются. Все пользовательские данные хранятся локально в песочнице приложения.
 

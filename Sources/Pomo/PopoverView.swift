@@ -73,6 +73,18 @@ struct PopoverView: View {
             .frame(maxWidth: 90)
 
             headerIconButton(
+                systemImage: store.isFloatingVisible
+                    ? "rectangle.on.rectangle"
+                    : "rectangle.on.rectangle.badge.plus",
+                label: store.isFloatingVisible
+                    ? appText("Скрыть плавающее окно", "Hide floating window")
+                    : appText("Показать плавающее окно", "Show floating window"),
+                isSelected: store.isFloatingVisible
+            ) {
+                store.setFloatingVisible(!store.isFloatingVisible)
+            }
+
+            headerIconButton(
                 systemImage: "clock.arrow.circlepath",
                 label: page == .history
                     ? appText("Закрыть историю", "Close history")
@@ -192,7 +204,7 @@ struct PopoverView: View {
                         )
                         .frame(width: 8, height: 8)
 
-                    Text(store.activeTaskTitle)
+                    Text(timerTaskStatus)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(palette.ink)
                         .lineLimit(2)
@@ -299,7 +311,11 @@ struct PopoverView: View {
 
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(appText("Очередь", "Queue"))
+                    Text(
+                        store.phase == .focus
+                            ? appText("Очередь", "Queue")
+                            : appText("Очередь после перерыва", "Queue after the break")
+                    )
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(palette.ink)
                     Text(taskSummary)
@@ -480,6 +496,18 @@ struct PopoverView: View {
                     )
 
                     SettingsToggleRow(
+                        title: appText("Автозапуск отдыха", "Auto-start break"),
+                        detail: appText(
+                            "После завершения работы отдых начнётся автоматически.",
+                            "Start the break automatically when focus ends."
+                        ),
+                        isOn: Binding(
+                            get: { store.autoStartBreak },
+                            set: { store.setAutoStartBreak($0) }
+                        )
+                    )
+
+                    SettingsToggleRow(
                         title: appText("Звук завершения", "Completion sound"),
                         detail: appText("Системный сигнал вместе с уведомлением.", "System sound with the notification."),
                         isOn: Binding(
@@ -621,12 +649,23 @@ struct PopoverView: View {
     }
 
     private var queuedTasks: [FocusTask] {
-        let unfinishedTasks = store.currentSessionTasks.filter { !$0.isCompleted }
-        return Array(unfinishedTasks.dropFirst())
+        let unfinishedTasks = store.unfinishedTasks
+        return store.phase == .focus
+            ? Array(unfinishedTasks.dropFirst())
+            : unfinishedTasks
     }
 
     private var completedTasks: [FocusTask] {
         store.currentSessionTasks.filter(\.isCompleted)
+    }
+
+    private var timerTaskStatus: String {
+        guard store.phase == .breakTime else { return store.activeTaskTitle }
+        guard let nextTask = store.focusTask else { return store.activeTaskTitle }
+        return appText(
+            "Перерыв. Далее: \(nextTask.title)",
+            "Break. Next: \(nextTask.title)"
+        )
     }
 
     private func settingsSectionTitle(_ title: String, detail: String) -> some View {

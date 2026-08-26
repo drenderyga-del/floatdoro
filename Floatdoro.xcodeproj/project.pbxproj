@@ -15,10 +15,21 @@
 		66EE683251EDA0117F1A00F4 /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800D1C5B5E18E01280D82A86 /* AppMain.swift */; };
 		746794CAFFBCB69763A56F52 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 41294505E264D9FC935220CF /* PrivacyInfo.xcprivacy */; };
 		7D1EE35AC0DBFF4BCE087DE4 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15BE8F1FE7596AC6A51C284 /* Theme.swift */; };
+		8F854CF373F5ABC19D6BDD2E /* PomoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEFD1259714A31BB5E23D86 /* PomoTests.swift */; };
 		ADA1F6A86F7EC6769BA74FC3 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10234E0335F9AA44D981450 /* Localization.swift */; };
 		C0999D96DD356C76185166DC /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C630E7BBC5949DA3A465E9 /* HistoryView.swift */; };
 		C381788D231E2A88B7693B07 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B590E5E8075BCF24627DC70 /* PopoverView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D8B96FF8DC417EFD665EF56C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F0DA4005F6AE0E408DEE4C9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 823DEB4365C52C1A00EB3858;
+			remoteInfo = Floatdoro;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		16C630E7BBC5949DA3A465E9 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -28,7 +39,9 @@
 		52D6B9BF8B917373E6F03011 /* FloatingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWidget.swift; sourceTree = "<group>"; };
 		5B590E5E8075BCF24627DC70 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
 		800D1C5B5E18E01280D82A86 /* AppMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMain.swift; sourceTree = "<group>"; };
+		9CEFD1259714A31BB5E23D86 /* PomoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomoTests.swift; sourceTree = "<group>"; };
 		B15BE8F1FE7596AC6A51C284 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B7D6CC4B22EB3A1C776FBEC0 /* FloatdoroTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FloatdoroTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10234E0335F9AA44D981450 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		D8EB1E324D7F2F974B9B10A3 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		E8ABE3B4D0A80EE8C9C6D31B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -40,6 +53,7 @@
 			isa = PBXGroup;
 			children = (
 				EAD85D1ECEB7E95C8864F260 /* Floatdoro.app */,
+				B7D6CC4B22EB3A1C776FBEC0 /* FloatdoroTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,10 +84,20 @@
 			path = Sources/Pomo;
 			sourceTree = "<group>";
 		};
+		6010727EE4744CB2DCF0FAA0 /* PomoTests */ = {
+			isa = PBXGroup;
+			children = (
+				9CEFD1259714A31BB5E23D86 /* PomoTests.swift */,
+			);
+			name = PomoTests;
+			path = Tests/PomoTests;
+			sourceTree = "<group>";
+		};
 		AF9B3B03AB83FB2D23796A9E = {
 			isa = PBXGroup;
 			children = (
 				191463C9E748F19D45E0F471 /* Pomo */,
+				6010727EE4744CB2DCF0FAA0 /* PomoTests */,
 				149EF64504898E7EC9CFBFF9 /* Resources */,
 				060C8644FE746B316E14180C /* Products */,
 			);
@@ -82,6 +106,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		682218BEEE05CD338F8D18EB /* FloatdoroTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4846F1B3016020CDEFED5501 /* Build configuration list for PBXNativeTarget "FloatdoroTests" */;
+			buildPhases = (
+				DAC2D5BFAF73B3FA978A9156 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BCE63B2042AF1B02C07EA3DD /* PBXTargetDependency */,
+			);
+			name = FloatdoroTests;
+			packageProductDependencies = (
+			);
+			productName = FloatdoroTests;
+			productReference = B7D6CC4B22EB3A1C776FBEC0 /* FloatdoroTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		823DEB4365C52C1A00EB3858 /* Floatdoro */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1232521BFA050C23D673DF19 /* Build configuration list for PBXNativeTarget "Floatdoro" */;
@@ -109,6 +151,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					682218BEEE05CD338F8D18EB = {
+						DevelopmentTeam = VGHSSCFY5X;
+						ProvisioningStyle = Automatic;
+					};
 					823DEB4365C52C1A00EB3858 = {
 						DevelopmentTeam = VGHSSCFY5X;
 						ProvisioningStyle = Automatic;
@@ -130,6 +176,7 @@
 			projectRoot = "";
 			targets = (
 				823DEB4365C52C1A00EB3858 /* Floatdoro */,
+				682218BEEE05CD338F8D18EB /* FloatdoroTests */,
 			);
 		};
 /* End PBXProject section */
@@ -147,6 +194,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DAC2D5BFAF73B3FA978A9156 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F854CF373F5ABC19D6BDD2E /* PomoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E75E0C3F57443B6D8B5B8DB9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -165,7 +220,33 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		BCE63B2042AF1B02C07EA3DD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 823DEB4365C52C1A00EB3858 /* Floatdoro */;
+			targetProxy = D8B96FF8DC417EFD665EF56C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1668F5F89AC7C270383B845C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro.tests";
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Floatdoro.app/Contents/MacOS/Floatdoro";
+			};
+			name = Debug;
+		};
 		364723AE54609C786CF2535F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -237,7 +318,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Resources/Floatdoro.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
@@ -246,7 +327,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro";
 				PRODUCT_MODULE_NAME = Floatdoro;
 				PRODUCT_NAME = Floatdoro;
@@ -318,7 +399,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Resources/Floatdoro.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
@@ -327,11 +408,29 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro";
 				PRODUCT_MODULE_NAME = Floatdoro;
 				PRODUCT_NAME = Floatdoro;
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		B91F1A0C14EFB6462F67FFEC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.drenderyga-del.floatdoro.tests";
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Floatdoro.app/Contents/MacOS/Floatdoro";
 			};
 			name = Release;
 		};
@@ -343,6 +442,15 @@
 			buildConfigurations = (
 				46023B7E67A9797F2D825A1E /* Debug */,
 				8E9C41AD2B7C1510E68F7E71 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4846F1B3016020CDEFED5501 /* Build configuration list for PBXNativeTarget "FloatdoroTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1668F5F89AC7C270383B845C /* Debug */,
+				B91F1A0C14EFB6462F67FFEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
