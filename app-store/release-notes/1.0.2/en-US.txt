@@ -1,0 +1,8 @@
+This update makes the timer easier to control while you work:
+
+• Optionally start the break automatically when a focus interval ends.
+• Keep the floating timer hidden or visible independently from starting a timer.
+• See the next focus task while you are on a break, without treating it as the active work task.
+• Improve menu-bar timer sizing, task queue behavior, and state restoration.
+
+Your settings and timer history remain stored locally on your Mac.

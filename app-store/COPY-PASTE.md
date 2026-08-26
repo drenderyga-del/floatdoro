@@ -5,8 +5,8 @@
 - App name: `Floatdoro`
 - Bundle ID: `io.github.drenderyga-del.floatdoro`
 - SKU: `floatdoro-macos-2026`
-- Version: `1.0.1`
-- Build: `7`
+- Version: `1.0.2`
+- Build: `8`
 - Primary language: English (U.S.)
 - Primary category: Productivity
 - Secondary category: Utilities
@@ -19,12 +19,12 @@
 - Marketing URL: `https://drenderyga-del.github.io/floatdoro/`
 - Privacy Policy URL: `https://drenderyga-del.github.io/floatdoro/privacy.html`
 
-## What's New — 1.0.1
+## What's New — 1.0.2
 
 Paste the localized release notes from:
 
-- English (U.S.): `app-store/release-notes/1.0.1/en-US.txt`
-- Russian: `app-store/release-notes/1.0.1/ru.txt`
+- English (U.S.): `app-store/release-notes/1.0.2/en-US.txt`
+- Russian: `app-store/release-notes/1.0.2/ru.txt`
 
 ---
 
