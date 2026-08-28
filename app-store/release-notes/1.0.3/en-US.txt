@@ -1,0 +1,9 @@
+Floatdoro now has a calmer, clearer interface built for quick glances:
+
+• Redesigned the menu bar panel, floating timer, Settings, and History.
+• Added a timer icon beside the live menu bar countdown.
+• Starting an interval no longer opens an extra window; the floating timer stays under your control.
+• Made the automatic break option easier to find in Settings.
+• Improved long task titles, queue counts, keyboard navigation, and Reduce Motion behavior.
+
+Your timer data, tasks, settings, and history remain stored locally on your Mac.

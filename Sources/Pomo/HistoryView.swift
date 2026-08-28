@@ -3,7 +3,8 @@ import SwiftUI
 struct HistoryView: View {
     @ObservedObject var store: TimerStore
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
     @State private var weekOffset = 0
     @State private var expandedDayIDs: Set<Date> = []
 
@@ -23,6 +24,9 @@ struct HistoryView: View {
     }
 
     private var palette: PomoPalette { store.theme.palette }
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
 
     private var historyDays: [HistoryDay] {
         let sessionsByDay = Dictionary(grouping: report.sessions) {
@@ -45,17 +49,17 @@ struct HistoryView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 16) {
                     weekNavigation
                     summaryPanel
                     weeklyChart
                     historyList
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 8)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
                 .padding(.bottom, 18)
             }
-            .scrollIndicators(.never)
+            .scrollIndicators(.automatic)
             .onChange(of: expandedDayIDs) { oldValue, newValue in
                 guard
                     let expandedDayID = newValue
@@ -100,9 +104,7 @@ struct HistoryView: View {
                 label: appText("Предыдущая неделя", "Previous week"),
                 isEnabled: true
             ) {
-                withAnimation(.easeOut(duration: 0.18)) {
-                    weekOffset -= 1
-                }
+                changeWeek(by: -1)
             }
 
             historyNavigationButton(
@@ -110,15 +112,13 @@ struct HistoryView: View {
                 label: appText("Следующая неделя", "Next week"),
                 isEnabled: weekOffset < 0
             ) {
-                withAnimation(.easeOut(duration: 0.18)) {
-                    weekOffset += 1
-                }
+                changeWeek(by: 1)
             }
         }
     }
 
     private var summaryPanel: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             HStack(spacing: 0) {
                 summaryMetric(
                     value: durationLabel(report.totalFocusSeconds),
@@ -140,9 +140,6 @@ struct HistoryView: View {
                 )
             }
 
-            Divider()
-                .overlay(palette.border)
-
             Text(
                 appText(
                     "Считаются завершённые интервалы; задача — только после галочки.",
@@ -155,12 +152,12 @@ struct HistoryView: View {
         }
         .padding(14)
         .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(palette.surface)
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(palette.surface.opacity(0.62))
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(palette.border, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(.white.opacity(0.20), lineWidth: 0.75)
         }
     }
 
@@ -200,6 +197,15 @@ struct HistoryView: View {
             }
             .frame(height: 94)
         }
+        .padding(14)
+        .background {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(palette.surface.opacity(0.62))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(.white.opacity(0.20), lineWidth: 0.75)
+        }
     }
 
     private func dayColumn(_ day: DailyFocusSummary) -> some View {
@@ -228,7 +234,7 @@ struct HistoryView: View {
 
                     if day.focusedSeconds > 0 {
                         Capsule()
-                            .fill(palette.tomato)
+                            .fill(palette.focusAccent)
                             .frame(
                                 height: max(
                                     5,
@@ -242,7 +248,7 @@ struct HistoryView: View {
 
             Text(weekdayLabel(day.date))
                 .font(.system(size: 10, weight: isToday ? .semibold : .medium))
-                .foregroundStyle(isToday ? palette.tomato : palette.muted)
+                .foregroundStyle(isToday ? palette.focusAccent : palette.muted)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
@@ -271,7 +277,7 @@ struct HistoryView: View {
             if historyDays.isEmpty {
                 emptyHistory
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     ForEach(historyDays) { day in
                         historyDayCard(day)
                             .id(day.id)
@@ -365,17 +371,17 @@ struct HistoryView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 4)
                 .transition(.opacity)
             }
         }
         .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(palette.surface)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(palette.surface.opacity(0.58))
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(palette.border, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 0.75)
         }
     }
 
@@ -383,7 +389,7 @@ struct HistoryView: View {
         VStack(spacing: 8) {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.system(size: 23, weight: .medium))
-                .foregroundStyle(palette.tomato)
+                .foregroundStyle(palette.focusAccent)
 
             Text(appText("История появится после первой завершённой сессии или задачи.", "History appears after your first completed session or task."))
                 .font(.system(size: 12, weight: .medium))
@@ -394,8 +400,12 @@ struct HistoryView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
         .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(palette.raised)
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(palette.surface.opacity(0.58))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 0.75)
         }
     }
 
@@ -403,9 +413,12 @@ struct HistoryView: View {
         HStack(spacing: 10) {
             Image(systemName: event.systemImage)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(event.isFocus ? palette.tomato : palette.ink)
+                .foregroundStyle(event.isFocus ? palette.focusAccent : palette.ink)
                 .frame(width: 30, height: 30)
-                .background(Circle().fill(palette.raised))
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(palette.canvas.opacity(0.66))
+                }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(event.title)
@@ -439,14 +452,13 @@ struct HistoryView: View {
             Image(systemName: systemImage)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(palette.ink)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(palette.raised))
-                .overlay {
-                    Circle()
-                        .stroke(palette.border, lineWidth: 1)
+                .frame(width: 34, height: 34)
+                .background {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(palette.surface.opacity(0.66))
                 }
         }
-        .buttonStyle(GlassPressButtonStyle())
+        .buttonStyle(.plain)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.34)
         .accessibilityLabel(label)
@@ -468,6 +480,16 @@ struct HistoryView: View {
                 .locale(currentLocale)
         )
         return "\(startLabel) — \(endLabel)"
+    }
+
+    private func changeWeek(by offset: Int) {
+        if reduceMotion {
+            weekOffset += offset
+        } else {
+            withAnimation(.easeOut(duration: 0.16)) {
+                weekOffset += offset
+            }
+        }
     }
 
     private func weekdayLabel(_ date: Date) -> String {

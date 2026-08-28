@@ -1,7 +1,7 @@
 Floatdoro is a menu bar utility and does not show a Dock icon.
 
-Click the Floatdoro timer in the macOS menu bar to open the main panel. Use the floating-window button in the panel header or the status-item menu to show the floating timer above other windows. Starting a focus interval does not open that panel automatically. The floating panel can be dragged and resized.
+Click the Floatdoro timer in the macOS menu bar to open the main panel. Use the overlapping-windows button in the panel header or the status-item menu to show the floating timer above other windows. Starting a focus interval does not open that panel automatically. The floating panel can be dragged and resized. The optional automatic break is available in Settings under Behaviour.
 
 No account, network connection, purchase, or demo credentials are required. All user data is stored locally in the app sandbox.
 
-The power button in the main panel and “Quit Floatdoro” in the status-item context menu terminate the application.
+Choose “Quit” at the bottom of Settings or “Quit Floatdoro” in the status-item context menu to terminate the application.

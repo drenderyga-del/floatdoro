@@ -6,6 +6,8 @@ import UserNotifications
 
 @MainActor
 final class TimerStore: ObservableObject {
+    static let maxTaskTitleLength = 160
+
     @Published private(set) var tasks: [FocusTask]
     @Published private(set) var phase: TimerPhase
     @Published private(set) var isRunning: Bool
@@ -346,7 +348,10 @@ final class TimerStore: ObservableObject {
     }
 
     func addTask(title rawTitle: String) {
-        let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = rawTitle.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let title = String(normalized.prefix(Self.maxTaskTitleLength))
         guard !title.isEmpty else { return }
         tasks.append(FocusTask(title: title, sessionID: currentWorkSessionID))
         persist()
@@ -446,6 +451,14 @@ final class TimerStore: ObservableObject {
     func persistNow() {
         persist()
     }
+
+#if DEBUG
+    /// Deterministic test seam for adjacent timer frames. The release ticker
+    /// remains wall-clock based; motion QA can pin the rendered countdown.
+    func setNowForMotionQA(_ date: Date) {
+        now = date
+    }
+#endif
 
     private func startTicker() {
         let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in

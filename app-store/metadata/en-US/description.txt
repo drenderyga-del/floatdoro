@@ -21,6 +21,7 @@ MAKE IT YOURS
 • Set custom focus and break durations
 • Rename work and rest modes
 • Choose a light or dark appearance
+• Optionally start breaks automatically when focus ends
 • Enable completion sounds and launch at login
 
 PRIVATE BY DESIGN

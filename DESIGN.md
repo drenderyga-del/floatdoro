@@ -2,77 +2,148 @@
 
 ## Direction
 
-Floatdoro takes its primary cue from the supplied mobile timer screenshot: a wide physical-looking timer with oversized countdown digits. The primary experience uses pure white, deep olive, fresh green, and soft sage while retaining a separately tuned dark treatment as an optional theme. The menu-bar presentation stays deliberately native and monochrome; the floating reminder carries the expressive design.
+Floatdoro uses the **Quiet Current** direction: a contemporary macOS timer with
+cool translucent material, generous breathing room, and one unmistakable
+timecode. It should feel like a focused system instrument rather than a legacy
+utility, dashboard, or paper ledger.
 
-Physical scene: one person working late at a Mac, moving between full-screen applications, with a single instrument-like timer remaining legible in peripheral vision.
+The primary reading path is phase → remaining time → current task → primary
+action → queue. Work uses a controlled coral accent and Rest uses blue. Accent
+color communicates state and emphasis; labels, symbols, and accessible values
+carry the same information without color.
 
-Color strategy: Restrained and monochromatic. White holds the surface, deep olive marks primary actions and focus, fresh green marks completion and breaks, and soft sage separates secondary controls. There is no blue, yellow, red, or pink in the product palette.
+Depth replaces decorative rules. Use one soft surface for a meaningful group,
+not a separate card for every row. Avoid beige paper tones, segmented progress,
+heavy outlines, ornamental gradients, nested cards, and dense toolbar chrome.
 
 ## Color
 
-All canonical tokens are defined in OKLCH and converted to sRGB at runtime.
+Canonical tokens are defined in OKLCH and converted to sRGB at runtime. Light
+and dark palettes are tuned independently.
 
-| Token | Value | Role |
-| --- | --- | --- |
-| Light canvas | `oklch(1.000 0 0)` | Default popover background |
-| Light surface | `oklch(1.000 0 0)` | Timer and floating reminder |
-| Light raised | `oklch(0.955 0.025 135)` | Secondary controls |
-| Light ink | `oklch(0.220 0.035 125)` | Primary text |
-| Light muted | `oklch(0.470 0.045 125)` | Secondary text |
-| Primary olive | `oklch(0.460 0.120 135)` | Main start action |
-| Focus green | `oklch(0.500 0.140 135)` | Focus status, timer digits, current task |
-| Break green | `oklch(0.675 0.145 145)` | Break status and completion |
-| Sage | `oklch(0.920 0.040 135)` | Secondary actions and information |
+| Token | Light | Dark | Role |
+| --- | --- | --- | --- |
+| Canvas | `oklch(0.975 0.004 255)` | `oklch(0.130 0.010 265)` | Cool translucent base |
+| Surface | `oklch(0.995 0.002 255)` | `oklch(0.185 0.014 265)` | Meaningful grouped surface |
+| Raised | `oklch(0.935 0.008 255)` | `oklch(0.245 0.016 265)` | Tracks and secondary controls |
+| Border | `oklch(0.820 0.010 255)` | `oklch(0.350 0.018 265)` | Focused fields and quiet separation |
+| Ink | `oklch(0.170 0.012 265)` | `oklch(0.965 0.004 255)` | Primary text and timer |
+| Muted | `oklch(0.430 0.012 265)` | `oklch(0.720 0.010 255)` | Supporting text |
+| Work | `oklch(0.575 0.205 29)` | `oklch(0.720 0.175 29)` | Work state and primary action |
+| Rest | `oklch(0.535 0.165 250)` | `oklch(0.745 0.135 250)` | Rest state and primary action |
+| Work wash | `oklch(0.930 0.045 29)` | `oklch(0.260 0.060 29)` | Selected work treatment |
+| Rest wash | `oklch(0.925 0.040 250)` | `oklch(0.260 0.050 250)` | Selected rest treatment |
 
-Dark mode uses the original near-black canvas with independently tuned surface and accent values; it is not a literal inversion.
+Use native material under the translucent canvas. A restrained phase glow may
+appear near the top leading edge, but it must never reduce text contrast or
+compete with the countdown.
 
 ## Typography
 
-Use the macOS system family throughout. The countdown uses SF Rounded with monospaced digits, bold weight, and tight leading. Interface text uses regular, medium, and semibold weights only.
+Use the macOS system family throughout. The countdown uses SF Rounded,
+monospaced digits, semibold weight, and tight tracking. Interface copy uses
+regular, medium, and semibold weights only.
 
 Type roles:
 
 - Menu-bar countdown: 12.5 pt medium, monospaced digits.
-- Floating countdown: 34 pt bold, rounded, monospaced digits.
-- Popover countdown: 64 pt bold, rounded, monospaced digits.
-- Section heading: 13 pt semibold.
-- Body and controls: 13–15 pt.
-- Supporting text: 11–12 pt.
+- Floating countdown: 60 pt semibold, rounded, monospaced digits.
+- Popover countdown: 76 pt semibold, rounded, monospaced digits.
+- Screen and section heading: 15–17 pt semibold.
+- Body and controls: 13–14 pt.
+- Supporting text and metadata: 10–12 pt.
 
-## Spacing
+The time remains the strongest element under a squint test. Metadata may use
+uppercase and slight tracking only for short state labels such as READY or
+RUNNING.
 
-Use a 4-point base scale: 4, 8, 12, 16, 24, and 32 points. Related controls group at 8–12 points; timer, controls, and task queue separate at 20–24 points.
+## Spacing and shape
+
+Use a 4-point base scale: 4, 8, 12, 16, 20, 24, and 32 points. Tight spacing
+belongs inside one control or label pair; distinct groups use 12–20 points.
+
+Corner radii express scale:
+
+- Small controls: 10–13 points.
+- Task and input surfaces: 12–15 points.
+- Section groups: 16–18 points.
+- Floating window: 22 points.
+
+Shadows are reserved for the floating window and primary action. Hairline
+outlines use low-opacity white on material; strong borders appear only for
+keyboard focus or editable fields.
 
 ## Components
 
 ### Menu-bar countdown
 
-A 56-point fixed-width, text-only `MM:SS` item using the native menu-bar background and dynamic system label color. It intentionally occupies about two standard icon slots on notched MacBook displays. Phase and task details stay in the tooltip and popover instead of widening the item.
-
-### Floating reminder
-
-A draggable, always-on-top, freely resizable reminder. It opens at 390×440 points and can be resized from 340×360 through 860×820 points. Compact layouts prioritize oversized clock digits, the current task, segmented progress, and the primary controls. The task queue appears when the available height allows it; color is never the only signal.
+Use a native variable-width status item with the `timer` SF Symbol followed by
+`MM:SS`. The status item has no custom plaque or fixed background. Phase and
+task details remain in its tooltip, accessibility label, and popover.
 
 ### Popover
 
-A focused 360×480 point surface sized for a 14-inch MacBook display. The compact toolbar, countdown, primary timer control, task entry, and queue form one vertical hierarchy without overflow. The queue receives the remaining height instead of forcing fixed empty-state spacing. Settings and history replace the main content in place and scroll within the same compact surface.
+The native transient popover is 404×590 points. It has no app-window titlebar.
+The first viewport contains the phase, countdown, progress, current task,
+transport controls, task entry, and queue. Settings and history replace the
+main content in place and scroll within the same surface.
 
-### Weekly history
+The timer area remains open and spacious. The current task may use one soft
+surface. The queue is one grouped region; individual rows are not cards.
 
-The weekly summary names its three inputs explicitly: completed focus time, completed work intervals, and checked-off tasks. The chart groups focus time by the day an interval ends. History is grouped into expandable days; each day reveals its work intervals and completed tasks without opening a modal.
+### Floating timer
 
-### Buttons
+The borderless, always-on-top timer opens at 368×280 points and expands to
+368×468 points when the queue is shown. It is resizable from 336×260 through
+620×680 points, stays available across spaces, and uses a 22-point continuous
+corner radius over native material.
 
-Primary actions use a deep olive fill with white ink. Secondary actions use soft sage fills. Icon-only controls have descriptive tooltips and at least 36×36 point targets; primary controls are 52×52.
+The compact state prioritizes phase, countdown, truthful running state,
+progress, current task, and transport. Expanding the queue anchors the top edge
+and changes height immediately so no clipped intermediate frame is exposed.
 
-### Task rows
+### Settings
 
-Rows are not cards. They use spacing and a subtle separator. The first unfinished task is marked with a focus-state glyph and stronger text. Completing it strikes it through and promotes the next unfinished task automatically.
+Settings use a small number of soft grouped surfaces with native segmented
+pickers, switches, links, and keyboard focus. The Behaviour group includes the
+optional **Auto-start break** switch and explains that Rest starts automatically
+after a completed Work interval.
+
+### History
+
+Weekly summary, chart, and day history are three semantic groups. Empty history
+explains what creates data. Expanded days reveal interval and completed-task
+rows in place without a modal.
+
+### Buttons and tasks
+
+Primary Start/Pause controls are at least 44 points high and use the current
+phase accent with a contrast-safe foreground. Secondary icon controls use
+40-point targets and a translucent surface. Icon-only controls always include
+an accessibility label and help text.
+
+Task rows use a checkbox symbol, readable title, and trailing actions menu.
+Completing the current task promotes the next unfinished task immediately.
 
 ## Motion
 
-State changes use 180–220 ms ease-out transitions. Progress animates linearly. There is no decorative entrance choreography. Reduce Motion removes scale and movement while preserving immediate color/state feedback.
+Press and page-state feedback uses 120–180 ms ease-out timing. Timer digits may
+use SwiftUI numeric text transitions. Page navigation uses opacity only; there
+is no decorative entrance choreography.
 
-## Accessibility
+Reduce Motion removes scale and numeric movement while preserving immediate
+state, color, and progress feedback. Floating-window expansion uses an immediate
+AppKit resize. Motion completion requires deterministic boundary captures plus
+a live host-Mac check; code review or unit tests alone are insufficient.
 
-Primary text meets at least 7:1 contrast against the background. Muted text meets at least 4.5:1. Every icon-only control has an accessibility label and help text. Focus and break use both labels and color. Timer values are announced as time remaining rather than as an unparsed number.
+## Accessibility and hardening
+
+Primary text targets at least 7:1 contrast against its effective background;
+muted copy and control labels target at least 4.5:1. The timer exposes a spoken
+time-remaining label, progress exposes a percentage, and Work/Rest always use
+text in addition to color.
+
+Support keyboard navigation, native focus visibility, VoiceOver semantics,
+Reduce Motion, long Russian and English labels, empty queues, long task titles,
+light and dark themes, and interruption at every timer state. Task titles are
+bounded by grapheme clusters so emoji and composed characters are never split.

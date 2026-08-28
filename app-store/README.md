@@ -1,14 +1,14 @@
 # Floatdoro App Store package
 
 This directory contains the customer-facing metadata, release notes, and final
-Mac screenshots for Floatdoro 1.0.2.
+Mac screenshots for Floatdoro 1.0.3.
 
 ## App record
 
 - Name: `Floatdoro`
 - Bundle ID: `io.github.drenderyga-del.floatdoro`
 - SKU: `floatdoro-macos-2026`
-- Version: `1.0.2`
+- Version: `1.0.3`
 - Primary language: English (U.S.)
 - Primary category: Productivity
 - Secondary category: Utilities
@@ -65,9 +65,9 @@ swift scripts/build_app_store_screenshots.swift
 1. Merge and deploy the `docs` directory through GitHub Pages.
 2. Confirm that the privacy, support, and marketing URLs load publicly.
 3. Create the app record with the values above.
-4. Archive build `8` with version `1.0.2`.
+4. Archive build `9` with version `1.0.3`.
 5. Validate and upload the archive from Xcode Organizer.
-6. Wait for processing and select the build under macOS 1.0.2.
+6. Wait for processing and select the build under macOS 1.0.3.
 7. Complete App Privacy, age rating, availability, and pricing.
 8. Add the English and Russian metadata and screenshots.
 9. Paste the review notes and choose manual release.

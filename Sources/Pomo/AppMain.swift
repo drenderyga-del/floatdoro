@@ -9,7 +9,7 @@ private extension Notification.Name {
 }
 
 private enum MainPanelMetrics {
-    static let contentSize = NSSize(width: 360, height: 480)
+    static let contentSize = NSSize(width: 404, height: 590)
 }
 
 @main
@@ -65,7 +65,10 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
     private var previewWindow: NSWindow?
-    private lazy var floatingPanelController = FloatingPanelController(store: store)
+    private lazy var floatingPanelController = FloatingPanelController(
+        store: store,
+        persistsFrame: !previewMode
+    )
     private var subscriptions = Set<AnyCancellable>()
 
     init(previewMode: Bool) {
@@ -107,7 +110,13 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if previewMode {
-            showPreviewWindow()
+            if CommandLine.arguments.contains("--preview-floating") {
+                store.setFloatingExpanded(true)
+                store.setFloatingVisible(true)
+                floatingPanelController.setVisible(true)
+            } else {
+                showPreviewWindow()
+            }
         } else {
             DistributedNotificationCenter.default().addObserver(
                 self,
@@ -116,7 +125,6 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
             configureMenuBar()
-            floatingPanelController.setVisible(store.isFloatingVisible)
         }
 
         if !previewMode {
@@ -124,8 +132,16 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in
                     DispatchQueue.main.async { [weak self] in
-                        self?.refreshChrome()
+                        self?.refreshStatusItem()
                     }
+                }
+                .store(in: &subscriptions)
+
+            store.$isFloatingVisible
+                .removeDuplicates()
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] isVisible in
+                    self?.floatingPanelController.setVisible(isVisible)
                 }
                 .store(in: &subscriptions)
         }
@@ -155,7 +171,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         button.action = #selector(handleStatusItemClick(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         button.imagePosition = .imageLeading
-        button.imageHugsTitle = false
+        button.imageHugsTitle = true
         button.alignment = .center
         item.isVisible = true
         button.toolTip = appText(
@@ -173,7 +189,7 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         let popover = NSPopover()
         popover.contentSize = MainPanelMetrics.contentSize
         popover.behavior = .transient
-        popover.animates = true
+        popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
                 store: store,
@@ -275,16 +291,17 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func refreshChrome() {
-        refreshStatusItem()
-        floatingPanelController.setVisible(store.isFloatingVisible)
-    }
-
     private func refreshStatusItem() {
         guard let button = statusItem?.button else { return }
 
-        button.image = nil
-        button.imagePosition = .noImage
+        let image = NSImage(
+            systemSymbolName: "timer",
+            accessibilityDescription: nil
+        )
+        image?.isTemplate = true
+        button.image = image
+        button.imagePosition = .imageLeading
+        button.imageHugsTitle = true
         button.alignment = .center
         button.contentTintColor = .labelColor
         button.title = store.displayTime
@@ -307,11 +324,26 @@ final class PomoAppDelegate: NSObject, NSApplicationDelegate {
             store: store,
             onQuit: { NSApp.terminate(nil) }
         )
-        let controller = NSHostingController(rootView: content)
+        let framedContent = content
+            .frame(
+                width: MainPanelMetrics.contentSize.width,
+                height: MainPanelMetrics.contentSize.height
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        let controller = NSHostingController(rootView: framedContent)
         controller.sizingOptions = []
-        let window = NSWindow(contentViewController: controller)
+        let window = NSWindow(
+            contentRect: NSRect(origin: .zero, size: MainPanelMetrics.contentSize),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = controller
         window.title = "Floatdoro Preview"
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
         window.contentMinSize = MainPanelMetrics.contentSize
         window.contentMaxSize = MainPanelMetrics.contentSize
         window.setContentSize(MainPanelMetrics.contentSize)

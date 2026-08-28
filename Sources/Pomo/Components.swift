@@ -7,72 +7,51 @@ struct ModeBadge: View {
     @Environment(\.pomoPalette) private var palette
 
     private var color: Color {
-        phase == .focus ? palette.tomato : palette.breakGreen
+        phase == .focus ? palette.focusAccent : palette.restAccent
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Circle()
                 .fill(color)
                 .frame(width: 8, height: 8)
+                .shadow(color: color.opacity(0.35), radius: 5)
             Text(title)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
-        .foregroundStyle(color)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            Capsule()
-                .fill(palette.raised)
-                .stroke(palette.border, lineWidth: 1)
-        )
+        .foregroundStyle(palette.ink)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
     }
 }
 
-struct CircleActionButton: View {
-    enum Treatment {
-        case primary
-        case secondary
-        case quiet
-    }
-
+struct IconActionButton: View {
     let systemImage: String
     let label: String
     var size: CGFloat = 44
-    var treatment: Treatment = .secondary
     var isEnabled = true
     let action: () -> Void
     @Environment(\.pomoPalette) private var palette
 
-    private var foreground: Color {
-        switch treatment {
-        case .primary: palette.onHoney
-        case .secondary, .quiet: palette.ink
-        }
-    }
-
-    private var background: Color {
-        switch treatment {
-        case .primary: palette.honey
-        case .secondary: palette.raised
-        case .quiet: .clear
-        }
-    }
-
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: size * 0.36, weight: .bold))
+                .font(.system(size: size * 0.34, weight: .semibold))
                 .frame(width: size, height: size)
-                .foregroundStyle(foreground)
-                .background(Circle().fill(background))
-                .contentShape(Circle())
+                .foregroundStyle(palette.ink)
+                .background(
+                    RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
+                        .fill(palette.surface.opacity(0.66))
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
+                        .stroke(.white.opacity(0.22), lineWidth: 0.75)
+                }
+                .contentShape(Rectangle())
         }
-        .buttonStyle(PomoCircleButtonStyle())
+        .buttonStyle(IconPressButtonStyle())
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.38)
         .accessibilityLabel(label)
@@ -80,14 +59,22 @@ struct CircleActionButton: View {
     }
 }
 
-private struct PomoCircleButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+private struct IconPressButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
+
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
             .brightness(configuration.isPressed ? -0.08 : 0)
-            .animation(.easeOut(duration: 0.16), value: configuration.isPressed)
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: 0.16),
+                value: configuration.isPressed
+            )
     }
 }
 
@@ -97,75 +84,53 @@ struct ProgressRail: View {
     @Environment(\.pomoPalette) private var palette
 
     private var color: Color {
-        phase == .focus ? palette.tomato : palette.breakGreen
+        phase == .focus ? palette.focusAccent : palette.restAccent
     }
 
     var body: some View {
         GeometryReader { geometry in
+            let clampedProgress = min(max(progress, 0), 1)
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(palette.raised)
-                Capsule()
-                    .fill(color)
-                    .frame(width: max(6, geometry.size.width * progress))
+                if clampedProgress > 0 {
+                    Capsule()
+                        .fill(color)
+                        .frame(
+                            width: max(
+                                2,
+                                geometry.size.width * clampedProgress
+                            )
+                        )
+                }
             }
         }
         .frame(height: 6)
         .accessibilityElement()
         .accessibilityLabel(appText("Прогресс интервала", "Interval progress"))
-        .accessibilityValue(appText("\(Int(progress * 100)) процентов", "\(Int(progress * 100)) percent"))
-    }
-}
-
-struct SegmentedProgressRail: View {
-    let progress: Double
-    let phase: TimerPhase
-    var segmentCount = 24
-
-    @Environment(\.pomoPalette) private var palette
-
-    private var activeColor: Color {
-        phase == .focus ? palette.tomato : palette.breakGreen
-    }
-
-    var body: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<segmentCount, id: \.self) { index in
-                Capsule()
-                    .fill(
-                        Double(index + 1) / Double(segmentCount) <= progress
-                            ? activeColor
-                            : palette.raised
-                    )
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .frame(height: 9)
-        .accessibilityElement()
-        .accessibilityLabel(appText("Прогресс интервала", "Interval progress"))
-        .accessibilityValue(appText("\(Int(progress * 100)) процентов", "\(Int(progress * 100)) percent"))
+        .accessibilityValue(
+            appText(
+                "\(Int(min(max(progress, 0), 1) * 100)) процентов",
+                "\(Int(min(max(progress, 0), 1) * 100)) percent"
+            )
+        )
     }
 }
 
 struct TaskRow: View {
     let task: FocusTask
-    let isActive: Bool
     let toggle: () -> Void
     let delete: () -> Void
     @Environment(\.pomoPalette) private var palette
 
-    private var indicatorColor: Color {
-        if task.isCompleted { return palette.breakGreen }
-        if isActive { return palette.tomato }
-        return palette.muted
-    }
-
     var body: some View {
         HStack(spacing: 10) {
             Button(action: toggle) {
-                Circle()
-                    .fill(indicatorColor)
-                    .frame(width: 9, height: 9)
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(
+                        task.isCompleted ? palette.focusAccent : palette.muted
+                    )
                     .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
@@ -173,7 +138,7 @@ struct TaskRow: View {
             .accessibilityLabel(task.isCompleted ? appText("Вернуть задачу \(task.title)", "Restore task \(task.title)") : appText("Завершить задачу \(task.title)", "Complete task \(task.title)"))
 
             Text(task.title)
-                .font(.system(size: 14, weight: isActive ? .semibold : .regular))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundStyle(task.isCompleted ? palette.muted : palette.ink)
                 .strikethrough(task.isCompleted, color: palette.muted)
                 .lineLimit(2)
@@ -195,13 +160,8 @@ struct TaskRow: View {
             .fixedSize()
             .accessibilityLabel(appText("Действия с задачей \(task.title)", "Actions for task \(task.title)"))
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 6)
         .padding(.vertical, 7)
-        .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(isActive ? palette.surface : palette.raised.opacity(0.45))
-                .stroke(isActive ? palette.border : .clear, lineWidth: 1)
-        )
         .contentShape(Rectangle())
     }
 }
@@ -224,7 +184,10 @@ struct DurationStepper: View {
             } label: {
                 Image(systemName: "minus")
                     .frame(width: 30, height: 30)
-                    .background(Circle().fill(palette.raised))
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(palette.surface.opacity(0.72))
+                    )
             }
             .buttonStyle(.plain)
             .disabled(value <= range.lowerBound)
@@ -241,7 +204,10 @@ struct DurationStepper: View {
             } label: {
                 Image(systemName: "plus")
                     .frame(width: 30, height: 30)
-                    .background(Circle().fill(palette.raised))
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(palette.surface.opacity(0.72))
+                    )
             }
             .buttonStyle(.plain)
             .disabled(value >= range.upperBound)
@@ -271,75 +237,9 @@ struct SettingsToggleRow: View {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .toggleStyle(.switch)
-                .tint(palette.tomato)
+                .tint(palette.focusAccent)
                 .accessibilityLabel(title)
                 .accessibilityHint(detail)
         }
-    }
-}
-
-struct FloatingActionButton: View {
-    enum Treatment {
-        case primary
-        case secondary
-        case success
-    }
-
-    let systemImage: String
-    let title: String
-    var treatment: Treatment = .secondary
-    var isEnabled = true
-    let action: () -> Void
-
-    @Environment(\.pomoPalette) private var palette
-
-    private var fill: Color {
-        switch treatment {
-        case .primary: palette.tomato
-        case .secondary: palette.raised
-        case .success: palette.breakWash
-        }
-    }
-
-    private var foreground: Color {
-        switch treatment {
-        case .primary: .white
-        case .secondary: palette.ink
-        case .success: palette.breakGreen
-        }
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .bold))
-                Text(title)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-            }
-            .foregroundStyle(foreground)
-            .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(fill)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-        .buttonStyle(PomoPressButtonStyle())
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.42)
-        .accessibilityLabel(title)
-    }
-}
-
-private struct PomoPressButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
-            .brightness(configuration.isPressed ? -0.05 : 0)
-            .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
     }
 }

@@ -1,654 +1,456 @@
 import AppKit
+import Combine
 import SwiftUI
-
-struct BehindWindowGlass: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .sidebar
-        view.blendingMode = .behindWindow
-        view.state = .active
-        view.isEmphasized = false
-        view.alphaValue = 1
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = .sidebar
-        nsView.blendingMode = .behindWindow
-        nsView.state = .active
-        nsView.alphaValue = 1
-    }
-}
 
 struct FloatingWidgetView: View {
     @ObservedObject var store: TimerStore
 
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
+
     private var palette: PomoPalette { store.theme.palette }
-
-    private var unfinishedTasks: [FocusTask] {
-        store.unfinishedTasks
+    private var phaseColor: Color {
+        store.phase == .focus ? palette.focusAccent : palette.restAccent
+    }
+    private var phaseForeground: Color {
+        store.phase == .focus ? palette.onFocusAccent : palette.onRestAccent
+    }
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
     }
 
-    private var nextTask: FocusTask? {
-        unfinishedTasks.dropFirst().first
+    private var waitingTasks: [FocusTask] {
+        let unfinished = store.unfinishedTasks
+        return store.phase == .focus
+            ? Array(unfinished.dropFirst())
+            : unfinished
     }
 
-    private var queuedTasks: [FocusTask] {
-        Array(unfinishedTasks.dropFirst())
-    }
-
-    private var completedTasks: [FocusTask] {
-        store.currentSessionTasks.filter(\.isCompleted)
-    }
-
-    private var remainingProgress: Double {
-        max(0, min(1, 1 - store.progress))
-    }
-
-    private var completedTaskCount: Int {
-        completedTasks.count
+    private var queue: [FocusTask] {
+        waitingTasks + store.currentSessionTasks.filter(\.isCompleted)
     }
 
     var body: some View {
         GeometryReader { geometry in
-            let contentSize = CGSize(
-                width: geometry.size.width,
-                height: max(0, geometry.size.height - 50)
-            )
-
             ZStack {
-                if store.theme == .light {
-                    palette.canvas
-                } else {
-                    BehindWindowGlass()
-                    Color.black.opacity(0.20)
-                }
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(.ultraThinMaterial)
+
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(palette.canvas.opacity(0.80))
+
+                RadialGradient(
+                    colors: [phaseColor.opacity(0.15), .clear],
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 300
+                )
+                .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
-                    header(compact: geometry.size.width < 430)
-                        .frame(height: 50)
+                    floatingHeader
+                    timerContent
 
-                    verticalContent(size: contentSize)
+                    if store.isFloatingExpanded {
+                        expandedQueue
+                    }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(palette.border, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(.white.opacity(0.26), lineWidth: 0.8)
             }
             .overlay(alignment: .bottomTrailing) {
                 resizeAffordance
             }
-            .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .environment(\.pomoPalette, palette)
+        .tint(phaseColor)
         .preferredColorScheme(store.theme.colorScheme)
     }
 
-    private func header(compact: Bool) -> some View {
-        ZStack {
-            HStack {
-                glassIconButton(
-                    systemImage: store.isFloatingExpanded
-                        ? "list.bullet.rectangle.fill"
-                        : "list.bullet",
-                    label: store.isFloatingExpanded
-                        ? appText("Скрыть очередь задач", "Hide task queue")
-                        : appText("Показать очередь задач", "Show task queue")
-                ) {
-                    withAnimation(.easeOut(duration: 0.20)) {
-                        store.setFloatingExpanded(!store.isFloatingExpanded)
+    private var floatingHeader: some View {
+        HStack(spacing: 8) {
+            ModeBadge(
+                phase: store.phase,
+                title: store.phaseStatusLabel,
+                accessibilityLabel: store.phaseStatusAccessibilityLabel
+            )
+
+            Spacer(minLength: 8)
+
+            Button {
+                store.setFloatingExpanded(!store.isFloatingExpanded)
+            } label: {
+                HStack(spacing: 5) {
+                    Image(
+                        systemName: store.isFloatingExpanded
+                            ? "list.bullet.rectangle.fill"
+                            : "list.bullet"
+                    )
+                    Text("\(waitingTasks.count)")
+                        .monospacedDigit()
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(
+                    store.isFloatingExpanded ? phaseColor : palette.muted
+                )
+                .frame(minWidth: 36, minHeight: 32)
+                .background {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(palette.surface.opacity(0.52))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(FloatingIconButtonStyle())
+            .accessibilityLabel(
+                store.isFloatingExpanded
+                    ? appText("Скрыть очередь задач", "Hide task queue")
+                    : appText("Показать очередь задач", "Show task queue")
+            )
+            .pomoHelp(
+                store.isFloatingExpanded
+                    ? appText("Скрыть очередь задач", "Hide task queue")
+                    : appText("Показать очередь задач", "Show task queue")
+            )
+
+            Button {
+                store.setFloatingVisible(false)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(palette.muted)
+                    .frame(width: 32, height: 32)
+                    .background {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(palette.surface.opacity(0.52))
                     }
-                }
-
-                Spacer()
-
-                glassIconButton(
-                    systemImage: "xmark",
-                    label: appText("Скрыть плавающее окно", "Hide floating window")
-                ) {
-                    store.setFloatingVisible(false)
-                }
+                    .contentShape(Rectangle())
             }
-
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(phaseColor)
-                    .frame(width: 9, height: 9)
-
-                Text(store.phaseStatusLabel)
-                    .font(.system(size: compact ? 13 : 14, weight: .semibold))
-                    .foregroundStyle(phaseColor)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(store.phaseStatusAccessibilityLabel)
+            .buttonStyle(FloatingIconButtonStyle())
+            .accessibilityLabel(
+                appText("Скрыть плавающий таймер", "Hide floating timer")
+            )
+            .pomoHelp(
+                appText("Скрыть плавающий таймер", "Hide floating timer")
+            )
         }
-        .padding(.horizontal, compact ? 13 : 16)
+        .frame(height: 48)
+        .padding(.horizontal, 16)
     }
 
-    @ViewBuilder
-    private func verticalContent(size: CGSize) -> some View {
-        let dense = size.height < 360
-        // A break deliberately never expands the work queue. The next focus
-        // task can be previewed below, but no work task is presented as an
-        // active break item.
-        let expandedQueue =
-            store.phase == .focus && store.isFloatingExpanded && size.height >= 340
-        let showsNext =
-            store.phase == .focus && !expandedQueue && size.height >= 390
-        let showsFooter = size.height >= 350
+    private var timerContent: some View {
+        VStack(spacing: 14) {
+            HStack(alignment: .lastTextBaseline, spacing: 12) {
+                Text(store.displayTime)
+                    .font(.system(size: 60, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .tracking(-1.8)
+                    .foregroundStyle(palette.ink)
+                    .contentTransition(
+                        reduceMotion
+                            ? .identity
+                            : .numericText(countsDown: true)
+                    )
+                    .minimumScaleFactor(0.72)
+                    .lineLimit(1)
+                    .accessibilityLabel(
+                        timerAccessibilityLabel(seconds: store.remainingSeconds)
+                    )
 
-        VStack(spacing: dense ? 7 : 11) {
-            timerScale(
-                compact: dense,
-                showsScaleLabels: size.height >= 330
-            )
-
-            taskPanel(
-                expanded: expandedQueue,
-                showsNext: showsNext,
-                compact: size.width < 410 || dense
-            )
-            .frame(
-                maxHeight: expandedQueue
-                    ? max(110, size.height * 0.31)
-                    : nil
-            )
-
-            actionBar(compact: size.width < 405)
-
-            if showsFooter {
                 Spacer(minLength: 0)
 
-                progressFooter
-                    .transition(.opacity)
-            }
-        }
-        .padding(.horizontal, size.width < 410 ? 14 : 20)
-        .padding(.bottom, dense ? 11 : 15)
-        .frame(maxWidth: 520, maxHeight: .infinity, alignment: .top)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-
-    private func timerScale(
-        compact: Bool,
-        showsScaleLabels: Bool
-    ) -> some View {
-        VStack(spacing: compact ? 5 : 8) {
-            Text(store.displayTime)
-                .font(
-                    .system(
-                        size: compact ? 54 : 72,
-                        weight: .light,
-                        design: .rounded
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(
+                        floatingTimerState
                     )
-                )
-                .monospacedDigit()
-                .tracking(-1.7)
-                .foregroundStyle(palette.ink)
-                .contentTransition(.numericText(countsDown: true))
-                .minimumScaleFactor(0.72)
-                .accessibilityLabel(
-                    timerAccessibilityLabel(seconds: store.remainingSeconds)
-                )
+                    .foregroundStyle(store.isRunning ? phaseColor : palette.muted)
 
-            Text(appText("из", "of") + " \(timerDisplay(seconds: store.durationSeconds))")
-                .font(.system(size: compact ? 14 : 17, weight: .medium))
-                .monospacedDigit()
-                .foregroundStyle(palette.muted)
-
-            SegmentedTimeScale(
-                remainingProgress: remainingProgress,
-                segmentCount: 10
-            )
-            .frame(maxWidth: 380)
-            .frame(height: compact ? 10 : 13)
-            .padding(.top, compact ? 3 : 7)
-
-            if showsScaleLabels {
-                HStack {
-                    Text("0")
-                    Spacer()
-                    Text(timerDisplay(seconds: store.durationSeconds / 2))
-                    Spacer()
                     Text(timerDisplay(seconds: store.durationSeconds))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.muted)
                 }
-                .font(.system(size: compact ? 10 : 11, weight: .medium))
-                .monospacedDigit()
-                .foregroundStyle(palette.muted)
-                .frame(maxWidth: 380)
+                .font(.system(size: 10, weight: .semibold))
+                .textCase(.uppercase)
+                .tracking(0.45)
             }
+
+            ProgressRail(progress: store.progress, phase: store.phase)
+            floatingTaskLine
+            floatingTransport
         }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .contain)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
     }
 
-    private func taskPanel(
-        expanded: Bool,
-        showsNext: Bool,
-        compact: Bool
-    ) -> some View {
-        VStack(alignment: .leading, spacing: compact ? 7 : 9) {
-            if expanded {
-                HStack {
-                    Text(appText("Задачи", "Tasks"))
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(palette.muted)
+    private var floatingTaskLine: some View {
+        HStack(spacing: 9) {
+            Image(
+                systemName: store.phase == .focus
+                    ? "scope"
+                    : "cup.and.saucer.fill"
+            )
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(phaseColor)
+            .frame(width: 17)
 
-                    Spacer()
-
-                    Text(appText("\(unfinishedTasks.count) осталось", "\(unfinishedTasks.count) left"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(palette.muted)
-                }
-
-                if unfinishedTasks.isEmpty {
-                    emptyTaskRow
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 6) {
-                            if let activeTask = store.activeTask {
-                                GlassTaskRow(
-                                    task: activeTask,
-                                    isActive: true,
-                                    isQuiet: false,
-                                    action: {
-                                        store.completeCurrentTask()
-                                    }
-                                )
-                            }
-
-                            ForEach(queuedTasks) { task in
-                                GlassTaskRow(
-                                    task: task,
-                                    isActive: false,
-                                    isQuiet: false,
-                                    action: {
-                                        store.toggleTask(id: task.id)
-                                    }
-                                )
-                            }
-
-                            if !completedTasks.isEmpty {
-                                ForEach(completedTasks) { task in
-                                    GlassTaskRow(
-                                        task: task,
-                                        isActive: false,
-                                        isQuiet: true,
-                                        action: {
-                                            store.toggleTask(id: task.id)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .scrollIndicators(.never)
-                }
-            } else {
-                Text(
-                    store.phase == .focus
-                        ? appText("Текущая задача", "Current task")
-                        : appText("Следующая задача фокуса", "Next focus task")
-                )
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(palette.muted)
-
-                if let task = store.activeTask {
-                    GlassTaskRow(
-                        task: task,
-                        isActive: true,
-                        isQuiet: false,
-                        action: {
-                            store.completeCurrentTask()
-                        }
-                    )
-                } else if let task = store.focusTask {
-                    GlassTaskRow(
-                        task: task,
-                        isActive: false,
-                        isQuiet: true,
-                        action: {
-                            store.toggleTask(id: task.id)
-                        }
-                    )
-                } else {
-                    emptyTaskRow
-                }
-
-                if showsNext, let nextTask {
-                    Text(appText("Далее", "Next"))
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(palette.muted)
-                        .padding(.top, 1)
-
-                    GlassTaskRow(
-                        task: nextTask,
-                        isActive: false,
-                        isQuiet: true,
-                        action: {
-                            store.toggleTask(id: nextTask.id)
-                        }
-                    )
-                }
-            }
-        }
-        .padding(compact ? 11 : 13)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(palette.raised.opacity(0.72))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(palette.border, lineWidth: 1)
-        }
-    }
-
-    private var emptyTaskRow: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(palette.tomato)
-                .frame(width: 9, height: 9)
-
-            Text(store.activeTaskTitle)
-                .font(.system(size: 14, weight: .medium))
+            Text(floatingTaskTitle)
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(palette.ink)
-                .lineLimit(2)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer(minLength: 0)
+            if store.canCompleteTask {
+                Button {
+                    store.completeCurrentTask()
+                } label: {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(phaseColor)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(FloatingIconButtonStyle())
+                .accessibilityLabel(
+                    appText("Завершить текущую задачу", "Complete current task")
+                )
+            }
         }
-        .padding(.horizontal, 11)
+        .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(palette.raised.opacity(0.92))
+                .fill(palette.surface.opacity(0.68))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.white.opacity(0.22), lineWidth: 0.75)
         }
     }
 
-    private var phaseColor: Color {
-        store.phase == .focus ? palette.tomato : palette.breakGreen
-    }
+    private var floatingTransport: some View {
+        HStack(spacing: 8) {
+            floatingUtilityButton(
+                systemImage: "arrow.counterclockwise",
+                label: appText(
+                    "Сбросить текущий интервал",
+                    "Reset current interval"
+                ),
+                action: store.resetCurrentInterval
+            )
 
-    private func actionBar(compact: Bool) -> some View {
-        HStack(spacing: compact ? 7 : 9) {
-            GlassActionButton(
-                systemImage: store.isRunning ? "pause.fill" : "play.fill",
-                title: compact
-                    ? nil
-                    : (store.isRunning ? appText("Пауза", "Pause") : appText("Старт", "Start")),
-                accessibilityLabel: store.isRunning
-                    ? appText("Поставить на паузу", "Pause timer")
-                    : appText("Запустить таймер", "Start timer"),
-                isEnabled: true
-            ) {
+            Button {
                 store.toggleRunning()
+            } label: {
+                HStack(spacing: 7) {
+                    Image(
+                        systemName: store.isRunning
+                            ? "pause.fill"
+                            : "play.fill"
+                    )
+                    Text(
+                        store.isRunning
+                            ? appText("Пауза", "Pause")
+                            : appText("Старт", "Start")
+                    )
+                }
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(phaseForeground)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background {
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .fill(phaseColor)
+                        .shadow(color: phaseColor.opacity(0.22), radius: 10, y: 4)
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(FloatingPrimaryButtonStyle())
+            .accessibilityLabel(
+                store.isRunning
+                    ? appText("Поставить таймер на паузу", "Pause timer")
+                    : appText("Запустить таймер", "Start timer")
+            )
 
-            GlassActionButton(
-                systemImage: "checkmark",
-                title: compact ? nil : appText("Готово", "Done"),
-                accessibilityLabel: appText("Завершить текущую задачу", "Complete current task"),
-                isEnabled: store.canCompleteTask
-            ) {
-                store.completeCurrentTask()
-            }
-
-            GlassActionButton(
+            floatingUtilityButton(
                 systemImage: "forward.fill",
-                title: compact ? nil : appText("Дальше", "Next"),
-                accessibilityLabel: store.phase == .focus
-                    ? appText("Перейти к \(store.resolvedRestStatusLabel.lowercased())", "Start \(store.resolvedRestStatusLabel)")
-                    : appText("Перейти к \(store.resolvedWorkStatusLabel.lowercased())", "Start \(store.resolvedWorkStatusLabel)"),
-                isEnabled: true
-            ) {
-                store.skipToNextPhase()
-            }
+                label: nextPhaseAccessibilityLabel,
+                action: store.skipToNextPhase
+            )
         }
     }
 
-    private var progressFooter: some View {
-        HStack {
-            Label {
-                Text("\(sessionCountInSet) / 4")
-            } icon: {
-                Image(systemName: "timer")
-            }
-
-            Spacer()
-
-            Label {
-                Text(appText("\(completedTaskCount) / \(store.currentSessionTasks.count) задач", "\(completedTaskCount) / \(store.currentSessionTasks.count) tasks"))
-            } icon: {
-                Image(systemName: "checkmark.circle")
-            }
-        }
-        .font(.system(size: 11, weight: .medium))
-        .foregroundStyle(palette.muted)
-        .padding(.horizontal, 7)
-    }
-
-    private var sessionCountInSet: Int {
-        guard store.completedSessions > 0 else { return 0 }
-        let remainder = store.completedSessions % 4
-        return remainder == 0 ? 4 : remainder
-    }
-
-    private func glassIconButton(
+    private func floatingUtilityButton(
         systemImage: String,
         label: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(palette.ink)
-                .frame(width: 34, height: 34)
+                .frame(width: 40, height: 40)
                 .background {
-                    Circle()
-                        .fill(palette.raised.opacity(0.72))
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .fill(palette.surface.opacity(0.70))
                 }
-                .overlay {
-                    Circle()
-                        .stroke(palette.border, lineWidth: 1)
-                }
-                .contentShape(Circle())
+                .contentShape(Rectangle())
         }
-        .buttonStyle(GlassPressButtonStyle())
+        .buttonStyle(FloatingIconButtonStyle())
         .accessibilityLabel(label)
-        .help(label)
+        .pomoHelp(label)
+    }
+
+    private var expandedQueue: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(appText("Очередь", "Queue"))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(palette.ink)
+                Spacer()
+                Text(
+                    appText(
+                        "\(waitingTasks.count) в очереди",
+                        "\(waitingTasks.count) queued"
+                    )
+                )
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(palette.muted)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+
+            if queue.isEmpty {
+                VStack(spacing: 7) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 17))
+                    Text(appText("Очередь пуста", "The queue is empty"))
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .foregroundStyle(palette.muted)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(12)
+                .accessibilityElement(children: .combine)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(queue.enumerated()), id: \.element.id) {
+                            index,
+                            task in
+                            TaskRow(
+                                task: task,
+                                toggle: { store.toggleTask(id: task.id) },
+                                delete: { store.deleteTask(id: task.id) }
+                            )
+
+                            if index < queue.count - 1 {
+                                Rectangle()
+                                    .fill(palette.border)
+                                    .frame(height: 1)
+                                    .padding(.leading, 40)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 8)
+                }
+                .scrollIndicators(.automatic)
+            }
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(palette.surface.opacity(0.56))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(.white.opacity(0.20), lineWidth: 0.75)
+        }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 10)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private var floatingTaskTitle: String {
+        if store.phase == .focus {
+            return store.activeTaskTitle
+        }
+        if let nextTask = store.focusTask {
+            return appText("Далее: \(nextTask.title)", "Next: \(nextTask.title)")
+        }
+        return store.activeTaskTitle
+    }
+
+    private var floatingTimerState: String {
+        if store.isRunning {
+            return appText("ИДЁТ", "RUNNING")
+        }
+        if store.progress > 0 {
+            return appText("ПАУЗА", "PAUSED")
+        }
+        return appText("ГОТОВ", "READY")
+    }
+
+    private var nextPhaseAccessibilityLabel: String {
+        store.phase == .focus
+            ? appText(
+                "Перейти к \(store.resolvedRestStatusLabel.lowercased())",
+                "Start \(store.resolvedRestStatusLabel)"
+            )
+            : appText(
+                "Перейти к \(store.resolvedWorkStatusLabel.lowercased())",
+                "Start \(store.resolvedWorkStatusLabel)"
+            )
     }
 
     private var resizeAffordance: some View {
         Image(systemName: "line.diagonal.arrow")
-            .font(.system(size: 9, weight: .semibold))
+            .font(.system(size: 8, weight: .semibold))
             .foregroundStyle(palette.muted.opacity(0.55))
             .rotationEffect(.degrees(90))
-            .padding(.trailing, 8)
-            .padding(.bottom, 7)
+            .padding(.trailing, 6)
+            .padding(.bottom, 5)
             .accessibilityHidden(true)
     }
 }
 
-private struct SegmentedTimeScale: View {
-    let remainingProgress: Double
-    let segmentCount: Int
+private struct FloatingIconButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.pomoPalette) private var palette
-
-    var body: some View {
-        HStack(spacing: 5) {
-            ForEach(0..<segmentCount, id: \.self) { index in
-                GeometryReader { geometry in
-                    let fill = fillAmount(for: index)
-
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(palette.raised)
-
-                        Capsule()
-                            .fill(palette.tomato)
-                            .frame(
-                                width: geometry.size.width * fill
-                            )
-                    }
-                    .clipShape(Capsule())
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .animation(
-            reduceMotion ? nil : .linear(duration: 0.28),
-            value: remainingProgress
-        )
-        .accessibilityElement()
-        .accessibilityLabel(appText("Оставшееся время", "Time remaining"))
-        .accessibilityValue(
-            appText(
-                "\(Int(remainingProgress * 100)) процентов",
-                "\(Int(remainingProgress * 100)) percent"
-            )
-        )
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
     }
-
-    private func fillAmount(for index: Int) -> CGFloat {
-        let scaledProgress =
-            remainingProgress * Double(segmentCount)
-            - Double(index)
-        return CGFloat(min(max(scaledProgress, 0), 1))
-    }
-}
-
-private struct GlassTaskRow: View {
-    let task: FocusTask
-    let isActive: Bool
-    let isQuiet: Bool
-    let action: () -> Void
-    @Environment(\.pomoPalette) private var palette
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(
-                        task.isCompleted
-                            ? palette.muted.opacity(0.55)
-                            : (isActive
-                                ? palette.tomato
-                                : palette.muted.opacity(0.55))
-                    )
-                    .frame(width: 9, height: 9)
-
-                Text(task.title)
-                    .font(
-                        .system(
-                            size: 14,
-                            weight: isActive ? .semibold : .regular
-                        )
-                    )
-                    .foregroundStyle(
-                        task.isCompleted || isQuiet
-                            ? palette.muted
-                            : palette.ink
-                    )
-                    .strikethrough(
-                        task.isCompleted,
-                        color: palette.muted
-                    )
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Image(
-                    systemName: task.isCompleted
-                        ? "checkmark"
-                        : "list.bullet"
-                )
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(palette.muted)
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 10)
-            .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(
-                        isActive
-                            ? palette.raised.opacity(0.92)
-                            : palette.raised.opacity(0.42)
-                    )
-            }
-            .contentShape(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-            )
-        }
-        .buttonStyle(GlassPressButtonStyle())
-        .accessibilityLabel(
-            task.isCompleted
-                ? appText(
-                    "Вернуть задачу \(task.title)",
-                    "Restore task \(task.title)"
-                )
-                : appText(
-                    "Завершить задачу \(task.title)",
-                    "Complete task \(task.title)"
-                )
-        )
-    }
-}
-
-struct GlassActionButton: View {
-    let systemImage: String
-    let title: String?
-    let accessibilityLabel: String
-    let isEnabled: Bool
-    let action: () -> Void
-    @Environment(\.pomoPalette) private var palette
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 14, weight: .semibold))
-
-                if let title {
-                    Text(title)
-                        .font(.system(size: 13, weight: .semibold))
-                }
-            }
-            .foregroundStyle(palette.ink)
-            .frame(maxWidth: .infinity, minHeight: 42)
-            .background {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(palette.raised.opacity(0.72))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(palette.border, lineWidth: 1)
-            }
-            .contentShape(
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-            )
-        }
-        .buttonStyle(GlassPressButtonStyle())
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.38)
-        .accessibilityLabel(accessibilityLabel)
-    }
-}
-
-struct GlassPressButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(
-                configuration.isPressed && !reduceMotion
-                    ? 0.96
-                    : 1
-            )
-            .brightness(configuration.isPressed ? -0.035 : 0)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.7 : 1)
             .animation(
-                reduceMotion ? nil : .easeOut(duration: 0.14),
+                reduceMotion ? nil : .easeOut(duration: 0.12),
+                value: configuration.isPressed
+            )
+    }
+}
+
+private struct FloatingPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
+
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+            .brightness(configuration.isPressed ? -0.06 : 0)
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: 0.12),
                 value: configuration.isPressed
             )
     }
@@ -659,7 +461,10 @@ private final class DraggableHostingView<Content: View>: NSHostingView<Content> 
 }
 
 private final class TopMovablePanel: NSPanel {
-    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+    override func constrainFrameRect(
+        _ frameRect: NSRect,
+        to screen: NSScreen?
+    ) -> NSRect {
         frameRect
     }
 }
@@ -667,19 +472,31 @@ private final class TopMovablePanel: NSPanel {
 @MainActor
 final class FloatingPanelController {
     private let store: TimerStore
+    private let persistsFrame: Bool
     private var panel: NSPanel?
+    private var cancellables: Set<AnyCancellable> = []
 
-    init(store: TimerStore) {
+    private let compactSize = NSSize(width: 368, height: 280)
+    private let expandedSize = NSSize(width: 368, height: 468)
+
+    init(store: TimerStore, persistsFrame: Bool = true) {
         self.store = store
+        self.persistsFrame = persistsFrame
+
+        store.$isFloatingExpanded
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] isExpanded in
+                self?.resizePanel(isExpanded: isExpanded)
+            }
+            .store(in: &cancellables)
     }
 
     func setVisible(_ visible: Bool) {
         if visible {
             show()
-        } else {
-            if panel?.isVisible == true {
-                panel?.orderOut(nil)
-            }
+        } else if panel?.isVisible == true {
+            panel?.orderOut(nil)
         }
     }
 
@@ -692,8 +509,19 @@ final class FloatingPanelController {
         panel?.makeFirstResponder(nil)
     }
 
+    private func resizePanel(isExpanded: Bool) {
+        guard let panel else { return }
+        let preferred = isExpanded ? expandedSize : compactSize
+        var frame = panel.frame
+        let anchoredTop = frame.maxY
+        frame.size.width = max(frame.width, preferred.width)
+        frame.size.height = preferred.height
+        frame.origin.y = anchoredTop - preferred.height
+        panel.setFrame(frame, display: true, animate: false)
+    }
+
     private func makePanel() -> NSPanel {
-        let defaultSize = NSSize(width: 390, height: 440)
+        let defaultSize = store.isFloatingExpanded ? expandedSize : compactSize
         let panel = TopMovablePanel(
             contentRect: NSRect(origin: .zero, size: defaultSize),
             styleMask: [
@@ -715,10 +543,10 @@ final class FloatingPanelController {
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
         panel.isMovableByWindowBackground = true
-        panel.animationBehavior = .utilityWindow
+        panel.animationBehavior = .none
         panel.isReleasedWhenClosed = false
-        panel.minSize = NSSize(width: 340, height: 360)
-        panel.maxSize = NSSize(width: 860, height: 820)
+        panel.minSize = NSSize(width: 336, height: 260)
+        panel.maxSize = NSSize(width: 620, height: 680)
         panel.standardWindowButton(.closeButton)?.isHidden = true
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
@@ -727,18 +555,15 @@ final class FloatingPanelController {
         let hostingView = DraggableHostingView(
             rootView: FloatingWidgetView(store: store)
         )
-        // The view uses GeometryReader and must follow the panel's size. Do
-        // not let AppKit derive a new window size from a transient SwiftUI
-        // layout pass when the queue expands, collapses, or changes phase.
         hostingView.sizingOptions = []
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         panel.contentView = hostingView
 
-        if
-            let screen = NSScreen.main,
-            !panel.setFrameUsingName("PomoFloatingPanelGlassV8")
-        {
+        let restoredFrame = persistsFrame && panel.setFrameUsingName(
+            "PomoFloatingPanelCurrentV2"
+        )
+        if let screen = NSScreen.main, !restoredFrame {
             let visible = screen.visibleFrame
             let origin = NSPoint(
                 x: visible.maxX - panel.frame.width - 20,
@@ -746,7 +571,9 @@ final class FloatingPanelController {
             )
             panel.setFrameOrigin(origin)
         }
-        panel.setFrameAutosaveName("PomoFloatingPanelGlassV8")
+        if persistsFrame {
+            panel.setFrameAutosaveName("PomoFloatingPanelCurrentV2")
+        }
         return panel
     }
 }

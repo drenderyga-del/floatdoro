@@ -104,7 +104,7 @@ Before creating an archive or uploading to TestFlight, run the preflight with
 the exact marketing version and build number:
 
 ```sh
-./scripts/preflight_release.sh 1.0.2 8
+./scripts/preflight_release.sh 1.0.3 9
 ```
 
 This runs both Swift Package and Xcode tests, regenerates the Xcode project,

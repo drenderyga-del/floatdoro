@@ -1,10 +1,25 @@
 import SwiftUI
 
+// DIRECTION CONTRACT — Quiet Current
+// THESIS: a contemporary macOS instrument with depth, air, and one landmark timecode.
+// OWN WORLD: cool translucent material, near-black type, coral Work, blue Rest.
+// STORY: identify the phase, read the time, act, then manage what comes next.
+// FIRST VIEWPORT: timer, current task, transport, and queue are visible at once.
+// FORM: native material, soft grouped surfaces, tabular numerals, restrained SF Symbols.
+// FINISH: keyboard, VoiceOver, localization, contrast, and Reduce Motion all ship.
 struct PopoverView: View {
-    enum Page {
+    enum Page: Equatable {
         case timer
         case history
         case settings
+
+        var title: String {
+            switch self {
+            case .timer: ""
+            case .history: appText("История", "History")
+            case .settings: appText("Настройки", "Settings")
+            }
+        }
     }
 
     private enum StatusField: Hashable {
@@ -15,422 +30,471 @@ struct PopoverView: View {
     @ObservedObject var store: TimerStore
     let onQuit: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
     @State private var page: Page = .timer
     @State private var newTaskTitle = ""
     @FocusState private var focusedStatusField: StatusField?
 
     private var palette: PomoPalette { store.theme.palette }
+    private var phaseColor: Color {
+        store.phase == .focus ? palette.focusAccent : palette.restAccent
+    }
+    private var phaseForeground: Color {
+        store.phase == .focus ? palette.onFocusAccent : palette.onRestAccent
+    }
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
 
     var body: some View {
         ZStack {
-            if store.theme == .light {
-                palette.canvas
-            } else {
-                BehindWindowGlass()
-                Color.black.opacity(0.20)
-            }
+            Rectangle()
+                .fill(.ultraThinMaterial)
+
+            palette.canvas.opacity(0.82)
+
+            RadialGradient(
+                colors: [phaseColor.opacity(0.12), .clear],
+                center: .topLeading,
+                startRadius: 0,
+                endRadius: 310
+            )
+            .allowsHitTesting(false)
 
             VStack(spacing: 0) {
-                header
+                toolbar
 
                 Group {
                     switch page {
                     case .timer:
                         timerPage
-                            .transition(.opacity)
                     case .history:
                         HistoryView(store: store)
-                            .transition(.opacity)
                     case .settings:
                         settingsPage
-                            .transition(.opacity)
                     }
                 }
-                .animation(.easeOut(duration: 0.18), value: page)
+                .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.pomoPalette, palette)
-        .tint(palette.tomato)
+        .tint(phaseColor)
         .preferredColorScheme(store.theme.colorScheme)
     }
 
-    private var header: some View {
+    private var toolbar: some View {
         HStack(spacing: 7) {
-            Text("Floatdoro")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(palette.ink)
-                .lineLimit(1)
-                .frame(width: 64, alignment: .leading)
-
-            Spacer()
-
-            ModeBadge(
-                phase: store.phase,
-                title: store.phaseStatusLabel,
-                accessibilityLabel: store.phaseStatusAccessibilityLabel
-            )
-            .frame(maxWidth: 90)
-
-            headerIconButton(
-                systemImage: store.isFloatingVisible
-                    ? "rectangle.on.rectangle"
-                    : "rectangle.on.rectangle.badge.plus",
-                label: store.isFloatingVisible
-                    ? appText("Скрыть плавающее окно", "Hide floating window")
-                    : appText("Показать плавающее окно", "Show floating window"),
-                isSelected: store.isFloatingVisible
-            ) {
-                store.setFloatingVisible(!store.isFloatingVisible)
+            if page == .timer {
+                ModeBadge(
+                    phase: store.phase,
+                    title: store.phaseStatusLabel,
+                    accessibilityLabel: store.phaseStatusAccessibilityLabel
+                )
+            } else {
+                Button {
+                    navigate(to: .timer)
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(page.title)
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(palette.ink)
+                    .frame(minHeight: 28)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(
+                    appText("Вернуться к таймеру", "Back to timer")
+                )
             }
 
-            headerIconButton(
-                systemImage: "clock.arrow.circlepath",
-                label: page == .history
-                    ? appText("Закрыть историю", "Close history")
-                    : appText("Открыть историю", "Open history"),
-                isSelected: page == .history
-            ) {
-                page = page == .history ? .timer : .history
-                store.clearError()
-            }
+            Spacer(minLength: 8)
 
-            headerIconButton(
-                systemImage: page == .settings ? "xmark" : "gearshape.fill",
-                label: page == .settings
-                    ? appText("Закрыть настройки", "Close settings")
-                    : appText("Открыть настройки", "Open settings"),
-                isSelected: page == .settings
-            ) {
-                page = page == .settings ? .timer : .settings
-                store.clearError()
-            }
+            if page == .timer {
+                toolbarButton(
+                    systemImage: "rectangle.on.rectangle",
+                    label: store.isFloatingVisible
+                        ? appText("Скрыть плавающий таймер", "Hide floating timer")
+                        : appText("Показать плавающий таймер", "Show floating timer"),
+                    isSelected: store.isFloatingVisible
+                ) {
+                    store.setFloatingVisible(!store.isFloatingVisible)
+                }
 
-            headerIconButton(
-                systemImage: "power",
-                label: appText("Выйти из Floatdoro", "Quit Floatdoro"),
-                isSelected: false,
-                action: onQuit
-            )
+                toolbarButton(
+                    systemImage: "clock.arrow.circlepath",
+                    label: appText("Открыть историю", "Open history")
+                ) {
+                    navigate(to: .history)
+                }
+
+                toolbarButton(
+                    systemImage: "gearshape",
+                    label: appText("Открыть настройки", "Open settings")
+                ) {
+                    navigate(to: .settings)
+                }
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 10)
-        .padding(.bottom, 8)
+        .frame(height: 48)
+        .padding(.horizontal, 18)
     }
 
-    private func headerIconButton(
+    private func toolbarButton(
         systemImage: String,
         label: String,
-        isSelected: Bool,
+        isSelected: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(isSelected ? palette.tomato : palette.muted)
-                .frame(width: 30, height: 30)
-                .background(
-                    Circle()
-                        .fill(isSelected ? palette.surface : palette.raised)
-                )
-                .overlay {
-                    Circle()
-                        .stroke(palette.border, lineWidth: 1)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isSelected ? palette.ink : palette.muted)
+                .frame(width: 32, height: 32)
+                .background {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(
+                            isSelected
+                                ? phaseWash.opacity(0.92)
+                                : palette.surface.opacity(0.46)
+                        )
                 }
+                .contentShape(Rectangle())
         }
-        .buttonStyle(GlassPressButtonStyle())
-        .focusEffectDisabled()
+        .buttonStyle(PomoIconButtonStyle())
         .accessibilityLabel(label)
         .pomoHelp(label)
     }
 
     private var timerPage: some View {
-        VStack(spacing: 0) {
-            timerOverview
-            timerControls
-
-            Divider()
-                .overlay(palette.border)
-
-            taskSection
+        VStack(spacing: 10) {
+            timerStage
+            taskQueue
         }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 12)
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
-    private var timerOverview: some View {
-        VStack(spacing: 8) {
-            Text(store.displayTime)
-                .font(.system(size: 58, weight: .light, design: .rounded))
-                .monospacedDigit()
-                .tracking(-1.4)
-                .foregroundStyle(palette.ink)
-                .contentTransition(.numericText(countsDown: true))
-                .accessibilityLabel(
-                    timerAccessibilityLabel(seconds: store.remainingSeconds)
-                )
+    private var timerStage: some View {
+        VStack(spacing: 17) {
+            VStack(spacing: 4) {
+                Text(store.displayTime)
+                    .font(.system(size: 76, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .tracking(-2.4)
+                    .foregroundStyle(palette.ink)
+                    .contentTransition(
+                        reduceMotion
+                            ? .identity
+                            : .numericText(countsDown: true)
+                    )
+                    .minimumScaleFactor(0.72)
+                    .accessibilityLabel(
+                        timerAccessibilityLabel(seconds: store.remainingSeconds)
+                    )
 
-            Text(
-                appText("из", "of")
-                    + " \(timerDisplay(seconds: store.durationSeconds))"
-            )
-            .font(.system(size: 13, weight: .medium))
-            .monospacedDigit()
-            .foregroundStyle(palette.muted)
-
-            SegmentedProgressRail(
-                progress: max(0, min(1, 1 - store.progress)),
-                phase: store.phase,
-                segmentCount: 10
-            )
-
-            HStack {
-                Text("0")
-                Spacer()
-                Text(timerDisplay(seconds: store.durationSeconds / 2))
-                Spacer()
-                Text(timerDisplay(seconds: store.durationSeconds))
+                Text(timerStateLine)
+                    .font(.system(size: 11, weight: .semibold))
+                    .monospacedDigit()
+                    .textCase(.uppercase)
+                    .tracking(0.55)
+                    .foregroundStyle(palette.muted)
             }
-            .font(.system(size: 9, weight: .medium))
-            .monospacedDigit()
-            .foregroundStyle(palette.muted)
 
-            if store.phase == .breakTime || store.activeTask != nil {
-                HStack(spacing: 9) {
-                    Circle()
-                        .fill(
-                            store.phase == .focus
-                                ? palette.tomato
-                                : palette.breakGreen
-                        )
-                        .frame(width: 8, height: 8)
+            ProgressRail(progress: store.progress, phase: store.phase)
 
-                    Text(timerTaskStatus)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(palette.ink)
-                        .lineLimit(2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            currentTaskLine
+            timerControls
+        }
+        .padding(.horizontal, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    private var timerStateLine: String {
+        let state: String
+        if store.isRunning {
+            state = appText("идёт", "running")
+        } else if store.progress > 0 {
+            state = appText("пауза", "paused")
+        } else {
+            state = appText("готов", "ready")
+        }
+        return "\(state) · \(timerDisplay(seconds: store.durationSeconds))"
+    }
+
+    private var currentTaskLine: some View {
+        HStack(spacing: 10) {
+            Image(
+                systemName: store.phase == .focus
+                    ? "scope"
+                    : "cup.and.saucer.fill"
+            )
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(phaseColor)
+            .frame(width: 18)
+
+            Text(timerTaskStatus)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(palette.ink)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if store.canCompleteTask {
+                Button {
+                    store.completeCurrentTask()
+                } label: {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(phaseColor)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
-                .frame(minHeight: 28)
+                .buttonStyle(PomoIconButtonStyle())
+                .accessibilityLabel(
+                    appText("Завершить текущую задачу", "Complete current task")
+                )
+                .pomoHelp(
+                    appText("Завершить текущую задачу", "Complete current task")
+                )
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
+        .background {
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .fill(palette.surface.opacity(0.70))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .stroke(.white.opacity(0.24), lineWidth: 0.75)
+        }
     }
 
     private var timerControls: some View {
         HStack(spacing: 8) {
-            CircleActionButton(
+            IconActionButton(
                 systemImage: "arrow.counterclockwise",
                 label: appText(
                     "Сбросить текущий интервал",
                     "Reset current interval"
                 ),
-                size: 36,
+                size: 40,
                 action: { store.resetCurrentInterval() }
             )
 
-            Button(action: { store.toggleRunning() }) {
+            Button {
+                store.toggleRunning()
+            } label: {
                 HStack(spacing: 7) {
                     Image(
                         systemName: store.isRunning
                             ? "pause.fill"
                             : "play.fill"
                     )
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
 
                     Text(
                         store.isRunning
                             ? appText("Пауза", "Pause")
                             : appText("Старт", "Start")
                     )
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(palette.onHoney)
+                .foregroundStyle(phaseForeground)
                 .frame(maxWidth: .infinity)
-                .frame(height: 36)
-                .background(
-                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                        .fill(palette.honey)
-                )
-                .contentShape(
-                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                )
+                .frame(height: 44)
+                .background {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(phaseColor)
+                        .shadow(color: phaseColor.opacity(0.24), radius: 12, y: 5)
+                }
+                .contentShape(Rectangle())
             }
-            .buttonStyle(GlassPressButtonStyle())
+            .buttonStyle(PomoPrimaryButtonStyle())
             .accessibilityLabel(
                 store.isRunning
-                    ? appText("Поставить на паузу", "Pause timer")
+                    ? appText("Поставить таймер на паузу", "Pause timer")
                     : appText("Запустить таймер", "Start timer")
             )
 
-            CircleActionButton(
+            IconActionButton(
                 systemImage: "forward.fill",
-                label: store.phase == .focus
-                    ? appText(
-                        "Перейти к \(store.resolvedRestStatusLabel.lowercased())",
-                        "Start \(store.resolvedRestStatusLabel)"
-                    )
-                    : appText(
-                        "Перейти к \(store.resolvedWorkStatusLabel.lowercased())",
-                        "Start \(store.resolvedWorkStatusLabel)"
-                    ),
-                size: 36,
+                label: nextPhaseAccessibilityLabel,
+                size: 40,
                 action: { store.skipToNextPhase() }
             )
-
-            CircleActionButton(
-                systemImage: "checkmark",
-                label: appText(
-                    "Завершить текущую задачу",
-                    "Complete current task"
-                ),
-                size: 36,
-                isEnabled: store.canCompleteTask,
-                action: { store.completeCurrentTask() }
-            )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
     }
 
-    private var taskSection: some View {
+    private var taskQueue: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(appText("Новая задача", "New task"))
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(palette.ink)
+            HStack(alignment: .firstTextBaseline) {
+                Text(
+                    store.phase == .focus
+                        ? appText("Очередь", "Queue")
+                        : appText("После перерыва", "After the break")
+                )
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(palette.ink)
 
-                addTaskField
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 9)
-
-            Divider()
-                .overlay(palette.border)
-
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(
-                        store.phase == .focus
-                            ? appText("Очередь", "Queue")
-                            : appText("Очередь после перерыва", "Queue after the break")
-                    )
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(palette.ink)
-                    Text(taskSummary)
-                        .font(.system(size: 11))
-                        .foregroundStyle(palette.muted)
-                }
                 Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
 
-            if queuedTasks.isEmpty && completedTasks.isEmpty {
-                Spacer(minLength: 0)
+                Text(taskSummary)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(palette.muted)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 13)
+            .padding(.bottom, 9)
+
+            addTaskField
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
+
+            if ledgerTasks.isEmpty {
+                VStack(spacing: 7) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(palette.muted)
+                    Text(
+                        store.phase == .focus && store.activeTask != nil
+                            ? appText(
+                                "После текущей задачи очередь пуста",
+                                "Nothing queued after the current task"
+                            )
+                            : appText("Очередь пуста", "The queue is empty")
+                    )
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(palette.muted)
+                    .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(14)
+                .accessibilityElement(children: .combine)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 6) {
-                        ForEach(queuedTasks) { task in
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(ledgerTasks.enumerated()), id: \.element.id) {
+                            index,
+                            task in
                             TaskRow(
                                 task: task,
-                                isActive: false,
                                 toggle: { store.toggleTask(id: task.id) },
                                 delete: { store.deleteTask(id: task.id) }
                             )
-                        }
 
-                        if !completedTasks.isEmpty {
-                            ForEach(completedTasks) { task in
-                                TaskRow(
-                                    task: task,
-                                    isActive: false,
-                                    toggle: { store.toggleTask(id: task.id) },
-                                    delete: { store.deleteTask(id: task.id) }
-                                )
+                            if index < ledgerTasks.count - 1 {
+                                Rectangle()
+                                    .fill(palette.border)
+                                    .frame(height: 1)
+                                    .padding(.leading, 40)
                             }
                         }
                     }
                     .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
+                    .padding(.vertical, 4)
                 }
             }
-
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(palette.surface.opacity(0.58))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.20), lineWidth: 0.75)
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private var addTaskField: some View {
-        HStack(spacing: 8) {
-            TextField(appText("Например: написать план проекта", "For example: write the project plan"), text: $newTaskTitle)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13))
-                .foregroundStyle(palette.ink)
-                .onSubmit(addTask)
-                .accessibilityLabel(appText("Название новой задачи", "New task title"))
+        HStack(spacing: 7) {
+            TextField(
+                appText("Добавить следующую задачу", "Add the next task"),
+                text: $newTaskTitle
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 12))
+            .foregroundStyle(palette.ink)
+            .onSubmit(addTask)
+            .accessibilityLabel(
+                appText("Название новой задачи", "New task title")
+            )
 
             Button(action: addTask) {
                 Image(systemName: "plus")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(palette.onHoney)
-                    .frame(width: 28, height: 28)
-                    .background(Circle().fill(palette.honey))
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(canAddTask ? phaseColor : palette.muted)
+                    .frame(width: 30, height: 30)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .disabled(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .opacity(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.45 : 1)
+            .buttonStyle(PomoIconButtonStyle())
+            .disabled(!canAddTask)
             .accessibilityLabel(appText("Добавить задачу", "Add task"))
         }
-        .padding(.leading, 11)
+        .padding(.leading, 12)
         .padding(.trailing, 4)
         .padding(.vertical, 4)
-        .background(
+        .background {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(palette.surface)
-                .stroke(palette.border, lineWidth: 1)
-        )
+                .fill(palette.canvas.opacity(0.72))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.white.opacity(0.24), lineWidth: 0.75)
+        }
     }
 
     private var settingsPage: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 14) {
-                    settingsSectionTitle(appText("Оформление", "Appearance"), detail: appText("Светлая тема включена по умолчанию.", "Light theme is enabled by default."))
-
-                    HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
+                settingsSection(
+                    appText("Оформление", "Appearance"),
+                    detail: appText(
+                        "Выбери комфортный контраст для рабочего стола.",
+                        "Choose the contrast that fits your desktop."
+                    )
+                ) {
+                    Picker(
+                        appText("Тема", "Theme"),
+                        selection: Binding(
+                            get: { store.theme },
+                            set: { store.setTheme($0) }
+                        )
+                    ) {
                         ForEach(PomoThemeMode.allCases, id: \.self) { theme in
-                            Button {
-                                store.setTheme(theme)
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: theme == .light ? "sun.max.fill" : "moon.stars.fill")
-                                    Text(theme.title)
-                                }
-                            }
-                            .buttonStyle(ThemeButtonStyle(
-                                selected: store.theme == theme,
-                                theme: theme
-                            ))
+                            Text(theme.title).tag(theme)
                         }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 }
 
-                Divider()
-                    .overlay(palette.border)
-
-                VStack(alignment: .leading, spacing: 14) {
-                    settingsSectionTitle(appText("Интервалы", "Durations"), detail: appText("Изменения применяются сразу, если таймер на паузе.", "Changes apply immediately while the timer is paused."))
-
-                    HStack(spacing: 8) {
+                settingsSection(
+                    appText("Интервалы", "Durations"),
+                    detail: appText(
+                        "На паузе изменения применяются сразу.",
+                        "Changes apply immediately while paused."
+                    )
+                ) {
+                    HStack(spacing: 7) {
                         ForEach(DurationPreset.defaults) { preset in
                             Button(preset.label) {
                                 store.applyPreset(preset)
                             }
-                            .buttonStyle(PresetButtonStyle(
-                                selected: store.focusMinutes == preset.focus &&
-                                    store.breakMinutes == preset.breakTime
-                            ))
+                            .buttonStyle(
+                                PresetButtonStyle(
+                                    selected: store.focusMinutes == preset.focus
+                                        && store.breakMinutes == preset.breakTime
+                                )
+                            )
                         }
                     }
 
@@ -438,28 +502,33 @@ struct PopoverView: View {
                         title: store.resolvedWorkStatusLabel,
                         value: store.focusMinutes,
                         range: 1...180,
-                        update: { store.setDurations(focus: $0, breakTime: store.breakMinutes) }
+                        update: {
+                            store.setDurations(
+                                focus: $0,
+                                breakTime: store.breakMinutes
+                            )
+                        }
                     )
                     DurationStepper(
                         title: store.resolvedRestStatusLabel,
                         value: store.breakMinutes,
                         range: 1...60,
-                        update: { store.setDurations(focus: store.focusMinutes, breakTime: $0) }
+                        update: {
+                            store.setDurations(
+                                focus: store.focusMinutes,
+                                breakTime: $0
+                            )
+                        }
                     )
                 }
 
-                Divider()
-                    .overlay(palette.border)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    settingsSectionTitle(
-                        appText("Подписи режимов", "Mode labels"),
-                        detail: appText(
-                            "Они показываются вверху таймера. Нажми на поле и напиши своё.",
-                            "They appear at the top of the timer. Click a field to write your own."
-                        )
+                settingsSection(
+                    appText("Названия режимов", "Mode names"),
+                    detail: appText(
+                        "Короткие подписи видны в панели и плавающем таймере.",
+                        "Short labels appear in the panel and floating timer."
                     )
-
+                ) {
                     statusLabelField(
                         title: appText("Работа", "Work"),
                         field: .work,
@@ -480,15 +549,19 @@ struct PopoverView: View {
                     )
                 }
 
-                Divider()
-                    .overlay(palette.border)
-
-                VStack(alignment: .leading, spacing: 18) {
-                    settingsSectionTitle(appText("Поведение", "Behaviour"), detail: appText("Настрой, где таймер остаётся видимым.", "Choose where the timer stays visible."))
-
+                settingsSection(
+                    appText("Поведение", "Behaviour"),
+                    detail: appText(
+                        "Настрой автоматизацию и системную интеграцию.",
+                        "Configure automation and system integration."
+                    )
+                ) {
                     SettingsToggleRow(
-                        title: appText("Большая плавающая плашка", "Floating window"),
-                        detail: appText("Поверх окон и на всех рабочих столах.", "Above windows and across all spaces."),
+                        title: appText("Плавающий таймер", "Floating timer"),
+                        detail: appText(
+                            "Поверх окон и на всех рабочих столах.",
+                            "Above windows and across all spaces."
+                        ),
                         isOn: Binding(
                             get: { store.isFloatingVisible },
                             set: { store.setFloatingVisible($0) }
@@ -498,7 +571,7 @@ struct PopoverView: View {
                     SettingsToggleRow(
                         title: appText("Автозапуск отдыха", "Auto-start break"),
                         detail: appText(
-                            "После завершения работы отдых начнётся автоматически.",
+                            "После завершения работы отдых начнётся сам.",
                             "Start the break automatically when focus ends."
                         ),
                         isOn: Binding(
@@ -509,7 +582,10 @@ struct PopoverView: View {
 
                     SettingsToggleRow(
                         title: appText("Звук завершения", "Completion sound"),
-                        detail: appText("Системный сигнал вместе с уведомлением.", "System sound with the notification."),
+                        detail: appText(
+                            "Системный сигнал вместе с уведомлением.",
+                            "System sound with the notification."
+                        ),
                         isOn: Binding(
                             get: { store.soundEnabled },
                             set: { store.setSoundEnabled($0) }
@@ -518,69 +594,115 @@ struct PopoverView: View {
 
                     SettingsToggleRow(
                         title: appText("Запускать при входе", "Launch at login"),
-                        detail: appText("Floatdoro появляется в меню-баре после входа в macOS.", "Floatdoro appears in the menu bar after login."),
+                        detail: appText(
+                            "Показывать Floatdoro в меню-баре после входа.",
+                            "Show Floatdoro in the menu bar after login."
+                        ),
                         isOn: Binding(
                             get: { store.launchAtLoginEnabled },
                             set: { store.setLaunchAtLogin($0) }
                         )
                     )
+
+                    if let error = store.errorMessage {
+                        HStack(alignment: .top, spacing: 10) {
+                            Label(
+                                error,
+                                systemImage: "exclamationmark.triangle.fill"
+                            )
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.red)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityLabel(
+                                appText("Ошибка. \(error)", "Error. \(error)")
+                            )
+
+                            Spacer(minLength: 0)
+
+                            Button {
+                                store.clearError()
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .frame(width: 28, height: 28)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(
+                                appText("Закрыть сообщение об ошибке", "Dismiss error")
+                            )
+                        }
+                        .padding(10)
+                        .background {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color.red.opacity(0.08))
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.red.opacity(0.24), lineWidth: 0.75)
+                        }
+                    }
                 }
 
-                if let error = store.errorMessage {
-                    Label(error, systemImage: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(palette.tomato)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(palette.focusWash)
-                        )
-                        .accessibilityLabel(appText("Ошибка. \(error)", "Error. \(error)"))
-                }
-
-                Divider()
-                    .overlay(palette.border)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack(spacing: 18) {
+                settingsSection(
+                    "Floatdoro",
+                    detail: appText(
+                        "Завершённых интервалов: \(store.completedSessions)",
+                        "Completed intervals: \(store.completedSessions)"
+                    )
+                ) {
+                    HStack(spacing: 16) {
                         Link(
                             appText("Конфиденциальность", "Privacy"),
-                            destination: URL(string: "https://drenderyga-del.github.io/floatdoro/privacy.html")!
+                            destination: URL(
+                                string: "https://drenderyga-del.github.io/floatdoro/privacy.html"
+                            )!
                         )
+                        .frame(minHeight: 28)
                         Link(
                             appText("Поддержка", "Support"),
-                            destination: URL(string: "https://drenderyga-del.github.io/floatdoro/support.html")!
+                            destination: URL(
+                                string: "https://drenderyga-del.github.io/floatdoro/support.html"
+                            )!
                         )
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(palette.muted)
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(appText("Завершённых сессий", "Completed sessions"))
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(palette.muted)
-                            Text("\(store.completedSessions)")
-                                .font(.system(size: 22, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(palette.ink)
-                        }
+                        .frame(minHeight: 28)
                         Spacer()
-                        Button(appText("Выйти из Floatdoro", "Quit Floatdoro"), action: onQuit)
-                            .buttonStyle(.plain)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(palette.tomato)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 9)
-                            .background(Capsule().fill(palette.focusWash))
+                        Button(
+                            appText("Выйти", "Quit"),
+                            role: .destructive,
+                            action: onQuit
+                        )
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.red)
+                        .frame(minHeight: 28)
                     }
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(minHeight: 28)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
-            .padding(.bottom, 20)
+            .padding(.horizontal, 14)
+            .padding(.top, 4)
+            .padding(.bottom, 16)
+        }
+    }
+
+    private func settingsSection<Content: View>(
+        _ title: String,
+        detail: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            settingsSectionTitle(title, detail: detail)
+            content()
+        }
+        .padding(15)
+        .background {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(palette.surface.opacity(0.62))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(.white.opacity(0.20), lineWidth: 0.75)
         }
     }
 
@@ -592,59 +714,43 @@ struct PopoverView: View {
     ) -> some View {
         HStack(spacing: 10) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(palette.ink)
-                .frame(width: 70, alignment: .leading)
+                .frame(width: 58, alignment: .leading)
 
-            HStack(spacing: 8) {
-                Image(systemName: "pencil")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(
-                        focusedStatusField == field
-                            ? palette.tomato
-                            : palette.muted
-                    )
-
-                TextField(placeholder, text: text)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(palette.ink)
-                    .focused($focusedStatusField, equals: field)
-                    .accessibilityLabel(title)
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 9)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(palette.surface)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(
-                        focusedStatusField == field
-                            ? palette.tomato
-                            : palette.border,
-                        lineWidth: focusedStatusField == field ? 2 : 1
-                    )
-            }
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .onTapGesture {
-                focusedStatusField = field
-            }
-            .animation(.easeOut(duration: 0.16), value: focusedStatusField)
+            TextField(placeholder, text: text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(palette.ink)
+                .focused($focusedStatusField, equals: field)
+                .accessibilityLabel(title)
+                .padding(.horizontal, 9)
+                .frame(height: 36)
+                .background {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(palette.canvas.opacity(0.64))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .stroke(
+                            focusedStatusField == field
+                                ? phaseColor
+                                : palette.border,
+                            lineWidth: focusedStatusField == field ? 2 : 1
+                        )
+                }
         }
+    }
+
+    private var phaseWash: Color {
+        store.phase == .focus ? palette.focusWash : palette.breakWash
     }
 
     private var taskSummary: String {
         let completed = completedTasks.count
-        if queuedTasks.isEmpty {
-            return completed == 0
-                ? appText("Следующих задач нет", "No next tasks")
-                : appText("\(completed) готово в этой сессии", "\(completed) done in this session")
-        }
         return appText(
-            "\(queuedTasks.count) в очереди · \(completed) готово",
-            "\(queuedTasks.count) in queue · \(completed) done"
+            "\(queuedTasks.count) далее · \(completed) готово",
+            "\(queuedTasks.count) next · \(completed) done"
         )
     }
 
@@ -659,29 +765,62 @@ struct PopoverView: View {
         store.currentSessionTasks.filter(\.isCompleted)
     }
 
+    private var ledgerTasks: [FocusTask] {
+        queuedTasks + completedTasks
+    }
+
     private var timerTaskStatus: String {
         guard store.phase == .breakTime else { return store.activeTaskTitle }
         guard let nextTask = store.focusTask else { return store.activeTaskTitle }
         return appText(
-            "Перерыв. Далее: \(nextTask.title)",
-            "Break. Next: \(nextTask.title)"
+            "Далее: \(nextTask.title)",
+            "Next: \(nextTask.title)"
         )
     }
 
+    private var nextPhaseAccessibilityLabel: String {
+        store.phase == .focus
+            ? appText(
+                "Перейти к \(store.resolvedRestStatusLabel.lowercased())",
+                "Start \(store.resolvedRestStatusLabel)"
+            )
+            : appText(
+                "Перейти к \(store.resolvedWorkStatusLabel.lowercased())",
+                "Start \(store.resolvedWorkStatusLabel)"
+            )
+    }
+
+    private var canAddTask: Bool {
+        !newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private func settingsSectionTitle(_ title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(palette.ink)
             Text(detail)
                 .font(.system(size: 11))
                 .foregroundStyle(palette.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func addTask() {
+        guard canAddTask else { return }
         store.addTask(title: newTaskTitle)
         newTaskTitle = ""
+    }
+
+    private func navigate(to destination: Page) {
+        store.clearError()
+        if reduceMotion {
+            page = destination
+        } else {
+            withAnimation(.easeOut(duration: 0.14)) {
+                page = destination
+            }
+        }
     }
 }
 
@@ -691,35 +830,57 @@ private struct PresetButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .font(.system(size: 12, weight: .semibold))
             .monospacedDigit()
-            .foregroundStyle(selected ? palette.onHoney : palette.ink)
+            .foregroundStyle(palette.ink)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 9)
-            .background(
-                Capsule()
-                    .fill(selected ? palette.honey : palette.raised)
-            )
-            .brightness(configuration.isPressed ? -0.08 : 0)
+            .frame(height: 36)
+            .background {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(selected ? palette.focusWash : palette.raised)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(selected ? palette.focusAccent : palette.border, lineWidth: 1)
+            }
+            .brightness(configuration.isPressed ? -0.06 : 0)
     }
 }
 
-private struct ThemeButtonStyle: ButtonStyle {
-    let selected: Bool
-    let theme: PomoThemeMode
-    @Environment(\.pomoPalette) private var palette
+private struct PomoIconButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
+
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(selected ? palette.onHoney : palette.muted)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 11)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(selected ? palette.honey : palette.raised)
-                    .stroke(selected ? palette.honey : palette.border, lineWidth: 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.72 : 1)
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: 0.12),
+                value: configuration.isPressed
             )
+    }
+}
+
+private struct PomoPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.pomoReduceMotionOverride) private var reduceMotionOverride
+
+    private var reduceMotion: Bool {
+        reduceMotionOverride ?? systemReduceMotion
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
             .brightness(configuration.isPressed ? -0.06 : 0)
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: 0.12),
+                value: configuration.isPressed
+            )
     }
 }

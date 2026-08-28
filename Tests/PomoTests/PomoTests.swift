@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Floatdoro
@@ -24,6 +25,83 @@ struct PomoTests {
         store.completeCurrentTask()
         #expect(store.tasks.first?.isCompleted == true)
         #expect(store.activeTask?.title == "Вторая")
+    }
+
+    @Test("Task titles are bounded without splitting composed characters")
+    func boundsTaskTitles() {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+        let longTitle = String(repeating: "👩🏽‍💻", count: 200)
+
+        store.addTask(title: "  \(longTitle)  ")
+
+        #expect(store.tasks.count == 1)
+        #expect(
+            store.tasks[0].title.count == TimerStore.maxTaskTitleLength
+        )
+        #expect(!store.tasks[0].title.hasPrefix(" "))
+        #expect(!store.tasks[0].title.hasSuffix(" "))
+    }
+
+    @Test("Light and dark palettes keep text and controls legible")
+    func paletteContrast() {
+        for palette in [PomoPalette.light, PomoPalette.dark] {
+            #expect(
+                contrast(
+                    palette.inkToken.nsColor,
+                    palette.canvasToken.nsColor
+                ) >= 7
+            )
+            #expect(
+                contrast(
+                    palette.mutedToken.nsColor,
+                    palette.canvasToken.nsColor
+                ) >= 4.5
+            )
+            #expect(
+                contrast(
+                    palette.focusAccentToken.nsColor,
+                    palette.canvasToken.nsColor
+                ) >= 4.5
+            )
+            #expect(
+                contrast(
+                    palette.restAccentToken.nsColor,
+                    palette.canvasToken.nsColor
+                ) >= 4.5
+            )
+            #expect(
+                contrast(
+                    NSColor(palette.onFocusAccent),
+                    palette.focusAccentToken.nsColor
+                ) >= 4.5
+            )
+            #expect(
+                contrast(
+                    NSColor(palette.onRestAccent),
+                    palette.restAccentToken.nsColor
+                ) >= 4.5
+            )
+        }
+    }
+
+    @Test("Motion QA clock reproduces adjacent countdown states")
+    func reproducesTimerFrames() throws {
+        let defaults = makeDefaults()
+        let store = TimerStore(defaults: defaults, startsTicker: false)
+        store.start()
+        let endDate = try #require(store.endDate)
+        let beforeBoundary = endDate.addingTimeInterval(-10.01)
+        let atBoundary = endDate.addingTimeInterval(-10)
+
+        store.setNowForMotionQA(beforeBoundary)
+        #expect(store.displayTime == "00:11")
+
+        store.setNowForMotionQA(atBoundary)
+        #expect(store.displayTime == "00:10")
+
+        store.setNowForMotionQA(beforeBoundary)
+        #expect(store.displayTime == "00:11")
     }
 
     @Test("Unfinished tasks carry into the next work session")
@@ -345,5 +423,28 @@ struct PomoTests {
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
         return defaults
+    }
+
+    private func contrast(_ foreground: NSColor, _ background: NSColor) -> Double {
+        let foregroundLuminance = relativeLuminance(foreground)
+        let backgroundLuminance = relativeLuminance(background)
+        let lighter = max(foregroundLuminance, backgroundLuminance)
+        let darker = min(foregroundLuminance, backgroundLuminance)
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    private func relativeLuminance(_ color: NSColor) -> Double {
+        guard let color = color.usingColorSpace(.sRGB) else { return 0 }
+
+        func linearize(_ component: CGFloat) -> Double {
+            let value = Double(component)
+            return value <= 0.04045
+                ? value / 12.92
+                : pow((value + 0.055) / 1.055, 2.4)
+        }
+
+        return 0.2126 * linearize(color.redComponent)
+            + 0.7152 * linearize(color.greenComponent)
+            + 0.0722 * linearize(color.blueComponent)
     }
 }

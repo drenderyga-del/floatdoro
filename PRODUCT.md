@@ -16,7 +16,9 @@ The primary user works on a Mac for long stretches and wants focus state to rema
 
 Floatdoro is a local-first menu-bar Pomodoro timer with an optional always-on-top floating window. It combines a compact system-native countdown with a lightweight task queue so the user can stay in flow, mark work complete, and move immediately to the next task.
 
-Success means the current countdown and task are readable in under a second, starting a session takes one click, and the timer remains correct through sleep, relaunch, and switching applications.
+Success means the current countdown and task are readable in under a second,
+starting a session takes one click without summoning an unexpected window, and
+the timer remains correct through sleep, relaunch, and switching applications.
 
 ## Positioning
 
@@ -24,7 +26,9 @@ The focus timer that stays visible and carries the next task with it.
 
 ## Brand Personality
 
-Direct, tactile, and calm. The product should feel like a purposeful physical timer translated into macOS: visible when needed, quiet when not, and satisfying to operate.
+Direct, calm, and contemporary. The product should feel like a focused macOS
+system instrument: visible when needed, quiet when not, and satisfying to
+operate without decorative utility chrome.
 
 ## Anti-references
 

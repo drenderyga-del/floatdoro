@@ -29,6 +29,21 @@ long/localized/empty/error states and `polish.md` for the final bounded quality
 pass. Check hierarchy, spacing, typography, semantic colors, accessibility,
 keyboard behavior, localization expansion, and platform conventions.
 
+### design-with-apple-hig — Apple-platform evidence and accessibility gate
+
+Use `design-with-apple-hig` for user-facing design, refactors, formal UI
+reviews, and any claim about Apple platform conventions. Build the smallest
+current evidence bundle for the decision: the macOS overview, the relevant HIG
+topics, the framework API documentation, and focused accessibility guidance.
+Keep Apple guidance, SDK facts, runtime observations, audit signals, and design
+heuristics distinct; never present an opinionated third-party rule as an Apple
+requirement.
+
+This skill complements rather than replaces `swiftui-expert-skill` and
+`impeccable`: SwiftUI Expert owns implementation correctness, Impeccable owns
+product taste and polish, and the HIG skill owns source-backed platform claims
+and the verification contract.
+
 ### ios-motion-qa — mandatory final stage for motion
 
 Whenever a task adds, changes, reviews, or claims completion for animation,
@@ -50,6 +65,12 @@ not actually proven.
 - `screenshot`: use for explicit desktop/window screenshots or when a visual
   capture is needed and no more specific capture path exists. Save inspection
   captures to a temporary location unless the user requests a project asset.
+- `screenshot-studio`: use only after the product UI is visually approved to
+  compose, localize, and export App Store showcase images. Do not use marketing
+  frames to conceal product UI defects.
+- `figma:figma-swiftui` with `figma:figma-use`: optional when a Figma file is
+  explicitly part of the task or becomes the agreed design source of truth.
+  Direct SwiftUI implementation remains the default for Floatdoro.
 
 Do not use browser, Playwright, web-design, ImageGen, or document/spreadsheet
 skills for ordinary Floatdoro UI work unless the task explicitly introduces
@@ -61,14 +82,18 @@ that surface or artifact.
    references.
 2. Load `impeccable` for user-facing work and perform the appropriate native
    audit/harden/polish pass.
-3. Implement or review the smallest coherent change, keeping business logic
+3. Load `design-with-apple-hig` for user-facing design or review and retrieve
+   only the current Apple sources needed for material platform decisions.
+4. Implement or review the smallest coherent change, keeping business logic
    testable outside view bodies.
-4. If motion is involved, run `ios-motion-qa` after implementation and after
+5. If motion is involved, run `ios-motion-qa` after implementation and after
    the final UI pass. Do not call a motion result PASS from code inspection or
    unit tests alone.
-5. Run the relevant tests and build checks, then `git diff --check`. For a
+6. Run the relevant tests and build checks, then `git diff --check`. For a
    release, run `scripts/preflight_release.sh` with the exact marketing
    version and build number before archiving or publishing.
+7. Use `screenshot-studio` for App Store assets only after the live product UI
+   has passed the visual review.
 
 ## Handoff evidence
 

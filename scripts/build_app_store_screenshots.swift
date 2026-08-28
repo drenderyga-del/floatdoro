@@ -8,9 +8,12 @@ private struct ScreenshotSpec {
     let output: String
     let locale: String
     let index: Int
+    let eyebrow: String
     let title: String
     let body: String
-    let background: NSColor
+    let backgroundStart: NSColor
+    let backgroundEnd: NSColor
+    let accent: NSColor
     let foreground: NSColor
     let muted: NSColor
     let screenshotOnLeft: Bool
@@ -18,12 +21,12 @@ private struct ScreenshotSpec {
 
 private let canvas = NSSize(width: 1440, height: 900)
 private let projectRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-private let accent = NSColor(
-    srgbRed: 0.27,
-    green: 0.49,
-    blue: 0.13,
-    alpha: 1
-)
+private let focusAccent = NSColor(srgbRed: 0.91, green: 0.18, blue: 0.14, alpha: 1)
+private let restAccent = NSColor(srgbRed: 0.18, green: 0.42, blue: 0.95, alpha: 1)
+private let lightInk = NSColor(srgbRed: 0.055, green: 0.065, blue: 0.095, alpha: 1)
+private let lightMuted = NSColor(srgbRed: 0.31, green: 0.33, blue: 0.39, alpha: 1)
+private let darkInk = NSColor(srgbRed: 0.97, green: 0.975, blue: 0.99, alpha: 1)
+private let darkMuted = NSColor(srgbRed: 0.70, green: 0.72, blue: 0.78, alpha: 1)
 
 private let specs = [
     ScreenshotSpec(
@@ -31,11 +34,14 @@ private let specs = [
         output: "app-store/screenshots/en-US/01-focus.jpg",
         locale: "en-US",
         index: 1,
-        title: "Focus, without losing your place.",
-        body: "A clear timer, task queue, and controls—one click from the menu bar.",
-        background: NSColor(srgbRed: 0.96, green: 0.97, blue: 0.95, alpha: 1),
-        foreground: NSColor(srgbRed: 0.08, green: 0.13, blue: 0.07, alpha: 1),
-        muted: NSColor(srgbRed: 0.32, green: 0.39, blue: 0.29, alpha: 1),
+        eyebrow: "MENU BAR FOCUS TIMER",
+        title: "Your focus.\nOne glance away.",
+        body: "A clear countdown, current task, and queue—right from the menu bar.",
+        backgroundStart: NSColor(srgbRed: 0.96, green: 0.97, blue: 0.995, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
+        accent: focusAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: false
     ),
     ScreenshotSpec(
@@ -43,11 +49,14 @@ private let specs = [
         output: "app-store/screenshots/en-US/02-floating.jpg",
         locale: "en-US",
         index: 2,
-        title: "Always visible. Never in the way.",
-        body: "Keep the floating timer above every workspace and resize it around your flow.",
-        background: NSColor(srgbRed: 0.10, green: 0.13, blue: 0.10, alpha: 1),
-        foreground: .white,
-        muted: NSColor(white: 0.80, alpha: 1),
+        eyebrow: "FLOATING TIMER",
+        title: "Stay visible.\nStay in flow.",
+        body: "Keep the floating timer above every workspace, compact or expanded.",
+        backgroundStart: NSColor(srgbRed: 0.055, green: 0.065, blue: 0.095, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.15, green: 0.085, blue: 0.105, alpha: 1),
+        accent: focusAccent,
+        foreground: darkInk,
+        muted: darkMuted,
         screenshotOnLeft: true
     ),
     ScreenshotSpec(
@@ -55,11 +64,14 @@ private let specs = [
         output: "app-store/screenshots/en-US/03-history.jpg",
         locale: "en-US",
         index: 3,
-        title: "See where your focus went.",
-        body: "Weekly sessions and completed tasks stay on your Mac.",
-        background: NSColor(srgbRed: 0.91, green: 0.95, blue: 0.89, alpha: 1),
-        foreground: NSColor(srgbRed: 0.08, green: 0.13, blue: 0.07, alpha: 1),
-        muted: NSColor(srgbRed: 0.30, green: 0.38, blue: 0.27, alpha: 1),
+        eyebrow: "LOCAL HISTORY",
+        title: "See the work\nyou finished.",
+        body: "Review weekly intervals and checked-off tasks. Everything stays on your Mac.",
+        backgroundStart: NSColor(srgbRed: 0.91, green: 0.945, blue: 1.00, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.975, green: 0.98, blue: 0.995, alpha: 1),
+        accent: restAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: false
     ),
     ScreenshotSpec(
@@ -67,11 +79,14 @@ private let specs = [
         output: "app-store/screenshots/en-US/04-settings.jpg",
         locale: "en-US",
         index: 4,
-        title: "Make the timer yours.",
-        body: "Choose durations, labels, appearance, sound, and launch behaviour.",
-        background: NSColor(srgbRed: 0.18, green: 0.28, blue: 0.14, alpha: 1),
-        foreground: .white,
-        muted: NSColor(srgbRed: 0.79, green: 0.86, blue: 0.75, alpha: 1),
+        eyebrow: "YOUR SETTINGS",
+        title: "Built around\nyour rhythm.",
+        body: "Set durations, labels, appearance, sound, and automatic breaks.",
+        backgroundStart: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.95, green: 0.965, blue: 0.995, alpha: 1),
+        accent: focusAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: true
     ),
     ScreenshotSpec(
@@ -79,11 +94,14 @@ private let specs = [
         output: "app-store/screenshots/ru/01-focus.jpg",
         locale: "ru",
         index: 1,
-        title: "Фокус — всегда под рукой.",
-        body: "Таймер, очередь задач и управление — в одном клике из строки меню.",
-        background: NSColor(srgbRed: 0.96, green: 0.97, blue: 0.95, alpha: 1),
-        foreground: NSColor(srgbRed: 0.08, green: 0.13, blue: 0.07, alpha: 1),
-        muted: NSColor(srgbRed: 0.32, green: 0.39, blue: 0.29, alpha: 1),
+        eyebrow: "ТАЙМЕР В СТРОКЕ МЕНЮ",
+        title: "Фокус — всегда\nперед глазами.",
+        body: "Таймер, текущая задача и очередь — прямо из строки меню.",
+        backgroundStart: NSColor(srgbRed: 0.96, green: 0.97, blue: 0.995, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
+        accent: focusAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: false
     ),
     ScreenshotSpec(
@@ -91,11 +109,14 @@ private let specs = [
         output: "app-store/screenshots/ru/02-floating.jpg",
         locale: "ru",
         index: 2,
-        title: "Всегда виден. Никогда не мешает.",
-        body: "Плавающий таймер остаётся поверх окон на любом рабочем столе.",
-        background: NSColor(srgbRed: 0.10, green: 0.13, blue: 0.10, alpha: 1),
-        foreground: .white,
-        muted: NSColor(white: 0.80, alpha: 1),
+        eyebrow: "ПЛАВАЮЩИЙ ТАЙМЕР",
+        title: "На виду.\nБез помех.",
+        body: "Плавающий таймер остаётся поверх окон: компактный или с очередью.",
+        backgroundStart: NSColor(srgbRed: 0.055, green: 0.065, blue: 0.095, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.15, green: 0.085, blue: 0.105, alpha: 1),
+        accent: focusAccent,
+        foreground: darkInk,
+        muted: darkMuted,
         screenshotOnLeft: true
     ),
     ScreenshotSpec(
@@ -103,11 +124,14 @@ private let specs = [
         output: "app-store/screenshots/ru/03-history.jpg",
         locale: "ru",
         index: 3,
-        title: "Понятная история фокуса.",
-        body: "Сессии и выполненные задачи остаются только на вашем Mac.",
-        background: NSColor(srgbRed: 0.91, green: 0.95, blue: 0.89, alpha: 1),
-        foreground: NSColor(srgbRed: 0.08, green: 0.13, blue: 0.07, alpha: 1),
-        muted: NSColor(srgbRed: 0.30, green: 0.38, blue: 0.27, alpha: 1),
+        eyebrow: "ЛОКАЛЬНАЯ ИСТОРИЯ",
+        title: "Видно, что\nсделано.",
+        body: "Смотрите интервалы и завершённые задачи за неделю. Данные остаются на Mac.",
+        backgroundStart: NSColor(srgbRed: 0.91, green: 0.945, blue: 1.00, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.975, green: 0.98, blue: 0.995, alpha: 1),
+        accent: restAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: false
     ),
     ScreenshotSpec(
@@ -115,11 +139,14 @@ private let specs = [
         output: "app-store/screenshots/ru/04-settings.jpg",
         locale: "ru",
         index: 4,
-        title: "Настройте таймер под себя.",
-        body: "Интервалы, подписи, оформление, звук и автозапуск.",
-        background: NSColor(srgbRed: 0.18, green: 0.28, blue: 0.14, alpha: 1),
-        foreground: .white,
-        muted: NSColor(srgbRed: 0.79, green: 0.86, blue: 0.75, alpha: 1),
+        eyebrow: "ВАШИ НАСТРОЙКИ",
+        title: "Работает\nв вашем ритме.",
+        body: "Настройте интервалы, названия, оформление, звук и автоматический отдых.",
+        backgroundStart: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
+        backgroundEnd: NSColor(srgbRed: 0.95, green: 0.965, blue: 0.995, alpha: 1),
+        accent: focusAccent,
+        foreground: lightInk,
+        muted: lightMuted,
         screenshotOnLeft: true
     )
 ]
@@ -156,9 +183,9 @@ private func drawScreenshot(_ image: NSImage, in rect: NSRect) {
     NSGraphicsContext.saveGraphicsState()
 
     let shadow = NSShadow()
-    shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
-    shadow.shadowBlurRadius = 34
-    shadow.shadowOffset = NSSize(width: 0, height: -12)
+    shadow.shadowColor = NSColor.black.withAlphaComponent(0.24)
+    shadow.shadowBlurRadius = 42
+    shadow.shadowOffset = NSSize(width: 0, height: -16)
     shadow.set()
 
     NSColor.white.setFill()
@@ -169,6 +196,11 @@ private func drawScreenshot(_ image: NSImage, in rect: NSRect) {
     NSBezierPath(roundedRect: rect, xRadius: 26, yRadius: 26).addClip()
     image.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
     NSGraphicsContext.restoreGraphicsState()
+
+    NSColor.white.withAlphaComponent(0.32).setStroke()
+    let border = NSBezierPath(roundedRect: rect, xRadius: 26, yRadius: 26)
+    border.lineWidth = 1
+    border.stroke()
 }
 
 private func render(_ spec: ScreenshotSpec) throws {
@@ -182,60 +214,96 @@ private func render(_ spec: ScreenshotSpec) throws {
 
     let image = NSImage(size: canvas)
     image.lockFocus()
-    spec.background.setFill()
-    NSBezierPath(rect: NSRect(origin: .zero, size: canvas)).fill()
+    NSGradient(starting: spec.backgroundStart, ending: spec.backgroundEnd)?.draw(
+        in: NSRect(origin: .zero, size: canvas),
+        angle: spec.screenshotOnLeft ? 20 : 160
+    )
 
-    let motifColor = spec.foreground.withAlphaComponent(0.07)
-    motifColor.setFill()
-    for index in 0..<6 {
-        let width = CGFloat(126 + index * 16)
-        let rect = rectFromTop(
-            x: spec.screenshotOnLeft ? 1180 - CGFloat(index * 48) : 40 + CGFloat(index * 48),
-            y: 74 + CGFloat(index * 92),
-            width: width,
-            height: 28
+    spec.accent.withAlphaComponent(0.11).setFill()
+    NSBezierPath(
+        ovalIn: rectFromTop(
+            x: spec.screenshotOnLeft ? -210 : 815,
+            y: -250,
+            width: 920,
+            height: 920
         )
-        NSBezierPath(roundedRect: rect, xRadius: 14, yRadius: 14).fill()
-    }
+    ).fill()
+    spec.accent.withAlphaComponent(0.055).setStroke()
+    let orbit = NSBezierPath(
+        ovalIn: rectFromTop(
+            x: spec.screenshotOnLeft ? -60 : 720,
+            y: -90,
+            width: 760,
+            height: 760
+        )
+    )
+    orbit.lineWidth = 2
+    orbit.stroke()
 
-    let iconURL = projectRoot.appendingPathComponent("Resources/AppIcon.png")
-    if let icon = NSImage(contentsOf: iconURL) {
-        icon.draw(
-            in: rectFromTop(x: 72, y: 62, width: 64, height: 64),
-            from: .zero,
-            operation: .sourceOver,
-            fraction: 1
+    let brandMark = rectFromTop(x: 72, y: 63, width: 46, height: 46)
+    spec.foreground.withAlphaComponent(0.08).setFill()
+    NSBezierPath(roundedRect: brandMark, xRadius: 14, yRadius: 14).fill()
+    spec.accent.setStroke()
+    let ring = NSBezierPath()
+    ring.appendArc(
+        withCenter: NSPoint(x: brandMark.midX, y: brandMark.midY),
+        radius: 11,
+        startAngle: 35,
+        endAngle: 326,
+        clockwise: false
+    )
+    ring.lineWidth = 3
+    ring.lineCapStyle = .round
+    ring.stroke()
+    spec.accent.setFill()
+    NSBezierPath(
+        ovalIn: NSRect(
+            x: brandMark.midX + 6.5,
+            y: brandMark.midY + 7.5,
+            width: 5,
+            height: 5
         )
-    }
+    ).fill()
+
     drawText(
         "FLOATDORO",
-        in: rectFromTop(x: 152, y: 76, width: 260, height: 40),
-        font: .systemFont(ofSize: 21, weight: .bold),
+        in: rectFromTop(x: 134, y: 75, width: 260, height: 34),
+        font: .systemFont(ofSize: 20, weight: .bold),
         color: spec.foreground
     )
+
+    let indexRect = rectFromTop(x: 1294, y: 65, width: 76, height: 40)
+    spec.foreground.withAlphaComponent(0.07).setFill()
+    NSBezierPath(roundedRect: indexRect, xRadius: 20, yRadius: 20).fill()
     drawText(
         String(format: "%02d", spec.index),
-        in: rectFromTop(x: 1310, y: 70, width: 70, height: 34),
-        font: .monospacedDigitSystemFont(ofSize: 18, weight: .semibold),
-        color: spec.muted
+        in: rectFromTop(x: 1317, y: 74, width: 44, height: 26),
+        font: .monospacedDigitSystemFont(ofSize: 16, weight: .semibold),
+        color: spec.foreground
     )
 
     let textX: CGFloat = spec.screenshotOnLeft ? 820 : 74
-    let titleY: CGFloat = 224
+    let titleY: CGFloat = 258
     let textWidth: CGFloat = 520
     drawText(
+        spec.eyebrow,
+        in: rectFromTop(x: textX, y: 205, width: textWidth, height: 30),
+        font: .systemFont(ofSize: 16, weight: .bold),
+        color: spec.accent
+    )
+    drawText(
         spec.title,
-        in: rectFromTop(x: textX, y: titleY, width: textWidth, height: 240),
-        font: .systemFont(ofSize: spec.locale == "ru" ? 60 : 66, weight: .bold),
+        in: rectFromTop(x: textX, y: titleY, width: textWidth, height: 210),
+        font: .systemFont(ofSize: spec.locale == "ru" ? 56 : 62, weight: .bold),
         color: spec.foreground,
-        lineHeight: spec.locale == "ru" ? 66 : 72
+        lineHeight: spec.locale == "ru" ? 61 : 67
     )
     drawText(
         spec.body,
-        in: rectFromTop(x: textX, y: 500, width: textWidth, height: 170),
-        font: .systemFont(ofSize: 27, weight: .medium),
+        in: rectFromTop(x: textX, y: 505, width: textWidth, height: 170),
+        font: .systemFont(ofSize: 25, weight: .medium),
         color: spec.muted,
-        lineHeight: 38
+        lineHeight: 36
     )
 
     let maxWidth: CGFloat = spec.input.contains("floating") ? 610 : 500

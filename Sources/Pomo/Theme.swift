@@ -61,10 +61,8 @@ struct PomoPalette: Sendable {
     let borderToken: OKLCHColor
     let inkToken: OKLCHColor
     let mutedToken: OKLCHColor
-    let honeyToken: OKLCHColor
-    let tomatoToken: OKLCHColor
-    let breakToken: OKLCHColor
-    let skyToken: OKLCHColor
+    let focusAccentToken: OKLCHColor
+    let restAccentToken: OKLCHColor
     let focusWashToken: OKLCHColor
     let breakWashToken: OKLCHColor
 
@@ -74,46 +72,43 @@ struct PomoPalette: Sendable {
     var border: Color { borderToken.color }
     var ink: Color { inkToken.color }
     var muted: Color { mutedToken.color }
-    var honey: Color { honeyToken.color }
-    var onHoney: Color {
-        honeyToken.lightness >= 0.60
-            ? OKLCHColor(0.180, 0.025, 135).color
-            : .white
-    }
-    var tomato: Color { tomatoToken.color }
-    var breakGreen: Color { breakToken.color }
-    var sky: Color { skyToken.color }
+    var focusAccent: Color { focusAccentToken.color }
+    var restAccent: Color { restAccentToken.color }
+    var onFocusAccent: Color { accentForeground(for: focusAccentToken) }
+    var onRestAccent: Color { accentForeground(for: restAccentToken) }
     var focusWash: Color { focusWashToken.color }
     var breakWash: Color { breakWashToken.color }
 
+    private func accentForeground(for token: OKLCHColor) -> Color {
+        token.lightness >= 0.62
+            ? OKLCHColor(0.180, 0.008, 265).color
+            : .white
+    }
+
     static let light = PomoPalette(
-        canvasToken: OKLCHColor(1.000, 0, 0),
-        surfaceToken: OKLCHColor(1.000, 0, 0),
-        raisedToken: OKLCHColor(0.955, 0.025, 135),
-        borderToken: OKLCHColor(0.875, 0.035, 135),
-        inkToken: OKLCHColor(0.220, 0.035, 125),
-        mutedToken: OKLCHColor(0.470, 0.045, 125),
-        honeyToken: OKLCHColor(0.460, 0.120, 135),
-        tomatoToken: OKLCHColor(0.500, 0.140, 135),
-        breakToken: OKLCHColor(0.675, 0.145, 145),
-        skyToken: OKLCHColor(0.920, 0.040, 135),
-        focusWashToken: OKLCHColor(0.965, 0.025, 135),
-        breakWashToken: OKLCHColor(0.950, 0.035, 145)
+        canvasToken: OKLCHColor(0.975, 0.004, 255),
+        surfaceToken: OKLCHColor(0.995, 0.002, 255),
+        raisedToken: OKLCHColor(0.935, 0.008, 255),
+        borderToken: OKLCHColor(0.820, 0.010, 255),
+        inkToken: OKLCHColor(0.170, 0.012, 265),
+        mutedToken: OKLCHColor(0.430, 0.012, 265),
+        focusAccentToken: OKLCHColor(0.575, 0.205, 29),
+        restAccentToken: OKLCHColor(0.535, 0.165, 250),
+        focusWashToken: OKLCHColor(0.930, 0.045, 29),
+        breakWashToken: OKLCHColor(0.925, 0.040, 250)
     )
 
     static let dark = PomoPalette(
-        canvasToken: OKLCHColor(0.105, 0.010, 135),
-        surfaceToken: OKLCHColor(0.175, 0.020, 135),
-        raisedToken: OKLCHColor(0.235, 0.030, 135),
-        borderToken: OKLCHColor(0.315, 0.035, 135),
-        inkToken: OKLCHColor(0.965, 0.008, 135),
-        mutedToken: OKLCHColor(0.710, 0.025, 135),
-        honeyToken: OKLCHColor(0.670, 0.120, 135),
-        tomatoToken: OKLCHColor(0.700, 0.130, 135),
-        breakToken: OKLCHColor(0.770, 0.110, 145),
-        skyToken: OKLCHColor(0.290, 0.035, 135),
-        focusWashToken: OKLCHColor(0.245, 0.050, 135),
-        breakWashToken: OKLCHColor(0.245, 0.045, 145)
+        canvasToken: OKLCHColor(0.130, 0.010, 265),
+        surfaceToken: OKLCHColor(0.185, 0.014, 265),
+        raisedToken: OKLCHColor(0.245, 0.016, 265),
+        borderToken: OKLCHColor(0.350, 0.018, 265),
+        inkToken: OKLCHColor(0.965, 0.004, 255),
+        mutedToken: OKLCHColor(0.720, 0.010, 255),
+        focusAccentToken: OKLCHColor(0.720, 0.175, 29),
+        restAccentToken: OKLCHColor(0.745, 0.135, 250),
+        focusWashToken: OKLCHColor(0.260, 0.060, 29),
+        breakWashToken: OKLCHColor(0.260, 0.050, 250)
     )
 }
 
@@ -133,15 +128,9 @@ extension PomoThemeMode {
     }
 }
 
-private struct PomoPaletteEnvironmentKey: EnvironmentKey {
-    static let defaultValue = PomoPalette.light
-}
-
 extension EnvironmentValues {
-    var pomoPalette: PomoPalette {
-        get { self[PomoPaletteEnvironmentKey.self] }
-        set { self[PomoPaletteEnvironmentKey.self] = newValue }
-    }
+    @Entry var pomoPalette = PomoPalette.light
+    @Entry var pomoReduceMotionOverride: Bool?
 }
 
 extension View {

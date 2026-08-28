@@ -5,8 +5,8 @@
 - App name: `Floatdoro`
 - Bundle ID: `io.github.drenderyga-del.floatdoro`
 - SKU: `floatdoro-macos-2026`
-- Version: `1.0.2`
-- Build: `8`
+- Version: `1.0.3`
+- Build: `9`
 - Primary language: English (U.S.)
 - Primary category: Productivity
 - Secondary category: Utilities
@@ -19,12 +19,12 @@
 - Marketing URL: `https://drenderyga-del.github.io/floatdoro/`
 - Privacy Policy URL: `https://drenderyga-del.github.io/floatdoro/privacy.html`
 
-## What's New — 1.0.2
+## What's New — 1.0.3
 
 Paste the localized release notes from:
 
-- English (U.S.): `app-store/release-notes/1.0.2/en-US.txt`
-- Russian: `app-store/release-notes/1.0.2/ru.txt`
+- English (U.S.): `app-store/release-notes/1.0.3/en-US.txt`
+- Russian: `app-store/release-notes/1.0.3/ru.txt`
 
 ---
 
@@ -74,6 +74,7 @@ MAKE IT YOURS
 • Set custom focus and break durations
 • Rename work and rest modes
 • Choose a light or dark appearance
+• Optionally start breaks automatically when focus ends
 • Enable completion sounds and launch at login
 
 PRIVATE BY DESIGN
@@ -92,11 +93,11 @@ pomodoro,focus,timer,productivity,menu bar,tasks,work,study,countdown
 ```text
 Floatdoro is a menu bar utility and does not show a Dock icon.
 
-Click the Floatdoro timer in the macOS menu bar to open the main panel. Use the floating-window button in the panel header or the status-item menu to show the floating timer above other windows. Starting a focus interval does not open that panel automatically. The floating panel can be dragged and resized.
+Click the Floatdoro timer in the macOS menu bar to open the main panel. Use the overlapping-windows button in the panel header or the status-item menu to show the floating timer above other windows. Starting a focus interval does not open that panel automatically. The floating panel can be dragged and resized. The optional automatic break is available in Settings under Behaviour.
 
 No account, network connection, purchase, or demo credentials are required. All user data is stored locally in the app sandbox.
 
-The power button in the main panel and “Quit Floatdoro” in the status-item context menu terminate the application.
+Choose “Quit” at the bottom of Settings or “Quit Floatdoro” in the status-item context menu to terminate the application.
 ```
 
 ## Screenshots
@@ -153,6 +154,7 @@ Floatdoro — это лаконичный Pomodoro-таймер для Mac, ко
 • Задавайте собственную длительность работы и отдыха
 • Переименовывайте режимы
 • Выбирайте светлое или тёмное оформление
+• При желании запускайте отдых автоматически после фокуса
 • Включайте звук завершения и запуск при входе
 
 КОНФИДЕНЦИАЛЬНОСТЬ ПО УМОЛЧАНИЮ
@@ -171,11 +173,11 @@ Floatdoro — это лаконичный Pomodoro-таймер для Mac, ко
 ```text
 Floatdoro работает в строке меню и не показывает значок в Dock.
 
-Нажмите на таймер Floatdoro в строке меню macOS, чтобы открыть основную панель. Используйте кнопку плавающего окна в заголовке панели или пункт меню статуса, чтобы показать таймер поверх других окон. Запуск рабочего интервала сам по себе не открывает эту панель. Плавающую панель можно перемещать и изменять её размер.
+Нажмите на таймер Floatdoro в строке меню macOS, чтобы открыть основную панель. Используйте кнопку с перекрывающимися окнами в заголовке панели или пункт меню статуса, чтобы показать таймер поверх других окон. Запуск рабочего интервала сам по себе не открывает эту панель. Плавающую панель можно перемещать и изменять её размер. Автоматический запуск отдыха включается в разделе «Поведение» настроек.
 
 Аккаунт, подключение к интернету, покупка и тестовые данные для входа не требуются. Все пользовательские данные хранятся локально в песочнице приложения.
 
-Кнопка питания в основной панели и пункт «Выйти из Floatdoro» в контекстном меню полностью завершают приложение.
+Кнопка «Выйти» внизу настроек и пункт «Выйти из Floatdoro» в контекстном меню полностью завершают приложение.
 ```
 
 ## Screenshots
