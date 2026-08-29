@@ -1,0 +1,9 @@
+# Safe defaults for draft metadata and screenshot synchronization.
+# App review submission and release stay deliberate App Store Connect actions.
+
+app_identifier("io.github.drenderyga-del.floatdoro")
+platform("osx")
+skip_binary_upload(true)
+sync_screenshots(false)
+submit_for_review(false)
+automatic_release(false)
