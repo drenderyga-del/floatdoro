@@ -124,3 +124,15 @@ gh workflow run app-store-draft-sync.yml \
   -f version=1.0.3 \
   -f confirm=SYNC
 ```
+
+The read-only `Audit App Store Draft` workflow compares the editable version,
+selected build, release mode, localized metadata, review notes, and exact
+screenshot source checksums with the repository. It performs no App Store
+Connect writes:
+
+```sh
+gh workflow run app-store-draft-audit.yml \
+  --ref main \
+  -f version=1.0.3 \
+  -f build_number=9
+```
