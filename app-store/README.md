@@ -65,10 +65,48 @@ swift scripts/build_app_store_screenshots.swift
 1. Merge and deploy the `docs` directory through GitHub Pages.
 2. Confirm that the privacy, support, and marketing URLs load publicly.
 3. Create the app record with the values above.
-4. Archive build `9` with version `1.0.3`.
-5. Validate and upload the archive from Xcode Organizer.
-6. Wait for processing and select the build under macOS 1.0.3.
-7. Complete App Privacy, age rating, availability, and pricing.
-8. Add the English and Russian metadata and screenshots.
-9. Paste the review notes and choose manual release.
-10. Submit for review.
+4. Confirm that processed build `9` is selected under macOS 1.0.3.
+5. Complete App Privacy, age rating, availability, and pricing.
+6. Add the English and Russian metadata and screenshots.
+7. Paste the review notes and choose manual release.
+8. Stop at the review gate. Submission and release are deliberate manual
+   actions in App Store Connect.
+
+## Unattended upload authentication
+
+The upload script uses an App Store Connect API key by default instead of
+silently relying on an expiring Apple Account session in Xcode. Keep the
+private `.p8` file outside the repository and readable only by the current
+user, then provide all three values:
+
+```sh
+export APPLE_API_KEY_ID="<key-id>"
+export APPLE_API_ISSUER_ID="<issuer-id>"
+export APPLE_API_PRIVATE_KEY_PATH="/secure/path/AuthKey_<key-id>.p8"
+chmod 600 "$APPLE_API_PRIVATE_KEY_PATH"
+
+./scripts/upload_testflight.sh --auth-check
+./scripts/upload_testflight.sh <version> <new-build-number>
+```
+
+`--auth-check` verifies the JWT with App Store Connect without archiving or
+uploading. Never reuse a build number that App Store Connect has already seen;
+Floatdoro 1.0.3 build `9` is already uploaded.
+
+For an intentional interactive fallback to the Apple Account saved in Xcode:
+
+```sh
+./scripts/upload_testflight.sh --xcode-session <version> <new-build-number>
+```
+
+The same API key variables are used by `scripts/notarize_app.sh`. A team API
+key with the Developer role is sufficient for build upload. Updating App Store
+metadata and screenshots requires a higher App Store Connect role, while
+submission and release remain manual gates. See Apple's documentation for
+[uploading builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds)
+and [creating API keys](https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api).
+
+The tag release workflow reads the corresponding GitHub Actions secrets,
+checks API authentication, runs the exact release preflight, and uploads the
+new build to TestFlight before publishing the GitHub release. It does not
+submit the App Store version for review or release it.

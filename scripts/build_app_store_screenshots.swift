@@ -20,6 +20,7 @@ private struct ScreenshotSpec {
 }
 
 private let canvas = NSSize(width: 1440, height: 900)
+private let outputScale: CGFloat = 2
 private let projectRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 private let focusAccent = NSColor(srgbRed: 0.91, green: 0.18, blue: 0.14, alpha: 1)
 private let restAccent = NSColor(srgbRed: 0.18, green: 0.42, blue: 0.95, alpha: 1)
@@ -81,7 +82,7 @@ private let specs = [
         index: 4,
         eyebrow: "YOUR SETTINGS",
         title: "Built around\nyour rhythm.",
-        body: "Set durations, labels, appearance, sound, and automatic breaks.",
+        body: "Automate breaks, keep the timer floating, and tune sound and startup.",
         backgroundStart: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
         backgroundEnd: NSColor(srgbRed: 0.95, green: 0.965, blue: 0.995, alpha: 1),
         accent: focusAccent,
@@ -141,7 +142,7 @@ private let specs = [
         index: 4,
         eyebrow: "ВАШИ НАСТРОЙКИ",
         title: "Работает\nв вашем ритме.",
-        body: "Настройте интервалы, названия, оформление, звук и автоматический отдых.",
+        body: "Автоматизируйте отдых, плавающий таймер, звук и запуск при входе.",
         backgroundStart: NSColor(srgbRed: 1.00, green: 0.945, blue: 0.935, alpha: 1),
         backgroundEnd: NSColor(srgbRed: 0.95, green: 0.965, blue: 0.995, alpha: 1),
         accent: focusAccent,
@@ -212,8 +213,28 @@ private func render(_ spec: ScreenshotSpec) throws {
         ])
     }
 
-    let image = NSImage(size: canvas)
-    image.lockFocus()
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: Int(canvas.width * outputScale),
+        pixelsHigh: Int(canvas.height * outputScale),
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 0
+    ), let context = NSGraphicsContext(bitmapImageRep: bitmap) else {
+        throw NSError(domain: "FloatdoroScreenshots", code: 2, userInfo: [
+            NSLocalizedDescriptionKey: "Could not create the 2x render target"
+        ])
+    }
+
+    bitmap.size = canvas
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = context
+    defer { NSGraphicsContext.restoreGraphicsState() }
+    context.cgContext.scaleBy(x: outputScale, y: outputScale)
     NSGradient(starting: spec.backgroundStart, ending: spec.backgroundEnd)?.draw(
         in: NSRect(origin: .zero, size: canvas),
         angle: spec.screenshotOnLeft ? 20 : 160
@@ -327,11 +348,9 @@ private func render(_ spec: ScreenshotSpec) throws {
         )
     )
 
-    image.unlockFocus()
+    context.flushGraphics()
 
     guard
-        let tiff = image.tiffRepresentation,
-        let bitmap = NSBitmapImageRep(data: tiff),
         let jpeg = bitmap.representation(
             using: .jpeg,
             properties: [.compressionFactor: 0.94]
