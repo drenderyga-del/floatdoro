@@ -110,3 +110,16 @@ The tag release workflow reads the corresponding GitHub Actions secrets,
 checks API authentication, runs the exact release preflight, and uploads the
 new build to TestFlight before publishing the GitHub release. It does not
 submit the App Store version for review or release it.
+
+The manual `Sync App Store Draft` workflow uploads the repository metadata and
+the four English and four Russian screenshots to an existing editable version.
+It requires the exact confirmation value `SYNC`, skips binary upload, and never
+submits or releases the version. The API key must have an App Store Connect
+role that can edit metadata and screenshots. Run it with:
+
+```sh
+gh workflow run app-store-draft-sync.yml \
+  --ref main \
+  -f version=1.0.3 \
+  -f confirm=SYNC
+```

@@ -1,0 +1,120 @@
+name: Sync App Store Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Editable App Store version
+        required: true
+        default: "1.0.3"
+        type: string
+      confirm:
+        description: Type SYNC to replace draft metadata and screenshots
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-store-draft-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Upload metadata and screenshots only
+    runs-on: macos-15
+    env:
+      FASTLANE_OPT_OUT_USAGE: "1"
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_VERSION: "2.238.0"
+
+    steps:
+      - name: Confirm bounded draft sync
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          test "$CONFIRM" = "SYNC"
+          [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          test -n "$APP_STORE_CONNECT_API_KEY_P8"
+          test -n "$APP_STORE_CONNECT_API_KEY_ID"
+          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install pinned fastlane
+        run: gem install fastlane --version "$FASTLANE_VERSION" --no-document
+
+      - name: Prepare API key and delivery metadata
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          API_KEY_JSON="$RUNNER_TEMP/app-store-connect-api-key.json"
+          DELIVERY_DIR="$RUNNER_TEMP/floatdoro-app-store-delivery"
+
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_P8" | base64 -D > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+          jq -n \
+            --arg key_id "$APP_STORE_CONNECT_API_KEY_ID" \
+            --arg issuer_id "$APP_STORE_CONNECT_API_ISSUER_ID" \
+            --rawfile key "$API_KEY_PATH" \
+            '{key_id: $key_id, issuer_id: $issuer_id, key: $key, in_house: false}' \
+            > "$API_KEY_JSON"
+          chmod 600 "$API_KEY_JSON"
+
+          ./scripts/prepare_app_store_delivery.sh "$VERSION" "$DELIVERY_DIR"
+          echo "APP_STORE_API_KEY_JSON=$API_KEY_JSON" >> "$GITHUB_ENV"
+          echo "APP_STORE_DELIVERY_DIR=$DELIVERY_DIR" >> "$GITHUB_ENV"
+
+      - name: Validate screenshot package
+        run: |
+          for locale in en-US ru; do
+            test "$(find "app-store/screenshots/$locale" -type f -name '*.jpg' | wc -l | tr -d ' ')" = "4"
+            for image in app-store/screenshots/$locale/*.jpg; do
+              dimensions="$(sips -g pixelWidth -g pixelHeight "$image" | awk '/pixelWidth/{w=$2}/pixelHeight/{h=$2}END{print w "x" h}')"
+              test "$dimensions" = "2880x1800"
+            done
+          done
+
+      - name: Sync editable App Store draft
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          fastlane deliver \
+            --api_key_path "$APP_STORE_API_KEY_JSON" \
+            --app_identifier "io.github.drenderyga-del.floatdoro" \
+            --app_version "$VERSION" \
+            --platform "osx" \
+            --metadata_path "$APP_STORE_DELIVERY_DIR/metadata" \
+            --screenshots_path "app-store/screenshots" \
+            --skip_binary_upload true \
+            --overwrite_screenshots true \
+            --sync_screenshots false \
+            --submit_for_review false \
+            --automatic_release false \
+            --run_precheck_before_submit false \
+            --force true
+
+      - name: Confirm manual review and release gates
+        run: |
+          echo "Draft metadata and screenshots were synchronized."
+          echo "No binary was uploaded."
+          echo "Submit for Review and release were not triggered."
