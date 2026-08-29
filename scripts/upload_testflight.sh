@@ -73,7 +73,6 @@ VERSION=${1:-}
 BUILD_NUMBER=${2:-}
 
 AUTH_ARGS=()
-ALTOOL_AUTH_ARGS=()
 APPLE_API_AUTH_VALUES=(
     "${APPLE_API_KEY_ID:-}"
     "${APPLE_API_ISSUER_ID:-}"
@@ -125,11 +124,6 @@ if ((set_auth_value_count == 3)); then
         -authenticationKeyID "$APPLE_API_KEY_ID"
         -authenticationKeyIssuerID "$APPLE_API_ISSUER_ID"
     )
-    ALTOOL_AUTH_ARGS=(
-        --api-key "$APPLE_API_KEY_ID"
-        --api-issuer "$APPLE_API_ISSUER_ID"
-        --p8-file-path "$APPLE_API_PRIVATE_KEY_PATH"
-    )
     echo "Using App Store Connect API key authentication."
 else
     echo "Using the Apple Account session saved in Xcode."
@@ -137,7 +131,11 @@ fi
 
 if (( AUTH_CHECK_ONLY )); then
     echo "Checking App Store Connect API key authentication..."
-    xcrun altool --list-providers "${ALTOOL_AUTH_ARGS[@]}" >/dev/null
+    xcrun notarytool history \
+        --key "$APPLE_API_PRIVATE_KEY_PATH" \
+        --key-id "$APPLE_API_KEY_ID" \
+        --issuer "$APPLE_API_ISSUER_ID" \
+        >/dev/null
     echo "App Store Connect API key authentication succeeded."
     exit 0
 fi
