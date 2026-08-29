@@ -136,3 +136,14 @@ gh workflow run app-store-draft-audit.yml \
   -f version=1.0.3 \
   -f build_number=9
 ```
+
+To attach an already processed build without changing metadata, submitting for
+review, or releasing the version, use the bounded build-selection workflow:
+
+```sh
+gh workflow run app-store-build-select.yml \
+  --ref main \
+  -f version=1.0.3 \
+  -f build_number=9 \
+  -f confirm=ATTACH
+```

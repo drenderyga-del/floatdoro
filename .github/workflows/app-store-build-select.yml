@@ -1,0 +1,93 @@
+name: Select App Store Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Editable App Store version
+        required: true
+        default: "1.0.3"
+        type: string
+      build_number:
+        description: Processed build to attach
+        required: true
+        default: "9"
+        type: string
+      confirm:
+        description: Type ATTACH to select the build without submitting
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-store-build-select
+  cancel-in-progress: false
+
+jobs:
+  select:
+    name: Attach processed build only
+    runs-on: macos-15
+    env:
+      FASTLANE_OPT_OUT_USAGE: "1"
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_VERSION: "2.238.0"
+
+    steps:
+      - name: Confirm bounded build selection
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: test "$CONFIRM" = "ATTACH"
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          test -n "$APP_STORE_CONNECT_API_KEY_P8"
+          test -n "$APP_STORE_CONNECT_API_KEY_ID"
+          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install pinned fastlane
+        run: gem install fastlane --version "$FASTLANE_VERSION" --no-document
+
+      - name: Prepare API key
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          API_KEY_JSON="$RUNNER_TEMP/app-store-connect-api-key.json"
+
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_P8" | base64 -D > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+          jq -n \
+            --arg key_id "$APP_STORE_CONNECT_API_KEY_ID" \
+            --arg issuer_id "$APP_STORE_CONNECT_API_ISSUER_ID" \
+            --rawfile key "$API_KEY_PATH" \
+            '{key_id: $key_id, issuer_id: $issuer_id, key: $key, in_house: false}' \
+            > "$API_KEY_JSON"
+          chmod 600 "$API_KEY_JSON"
+          echo "APP_STORE_API_KEY_JSON=$API_KEY_JSON" >> "$GITHUB_ENV"
+
+      - name: Select and verify build
+        env:
+          VERSION: ${{ inputs.version }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: ruby scripts/select_app_store_build.rb "$VERSION" "$BUILD_NUMBER"
+
+      - name: Confirm manual gates remain
+        run: |
+          echo "The processed build is attached to the editable version."
+          echo "Submit for Review and release were not triggered."
