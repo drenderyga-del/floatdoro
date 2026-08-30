@@ -43,13 +43,17 @@ jobs:
 
       - name: Validate required secrets
         env:
-          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_RELEASE_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_KEY_P8 }}
+          APP_STORE_CONNECT_RELEASE_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_KEY_ID }}
+          APP_STORE_CONNECT_RELEASE_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_ISSUER_ID }}
         run: |
-          test -n "$APP_STORE_CONNECT_API_KEY_P8"
-          test -n "$APP_STORE_CONNECT_API_KEY_ID"
-          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
+          if [[ -z "$APP_STORE_CONNECT_RELEASE_API_KEY_P8" || \
+                -z "$APP_STORE_CONNECT_RELEASE_API_KEY_ID" || \
+                -z "$APP_STORE_CONNECT_RELEASE_API_ISSUER_ID" ]]; then
+            echo "::error::Draft writes require the dedicated App Store Connect App Manager secrets."
+            echo "::error::Configure APP_STORE_CONNECT_RELEASE_API_KEY_P8, APP_STORE_CONNECT_RELEASE_API_KEY_ID, and APP_STORE_CONNECT_RELEASE_API_ISSUER_ID."
+            exit 1
+          fi
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -61,9 +65,9 @@ jobs:
 
       - name: Prepare API key and delivery metadata
         env:
-          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_RELEASE_API_ISSUER_ID }}
           VERSION: ${{ inputs.version }}
         run: |
           API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"

@@ -111,12 +111,24 @@ checks API authentication, runs the exact release preflight, and uploads the
 new build to TestFlight before publishing the GitHub release. It does not
 submit the App Store version for review or release it.
 
+Keep upload/read access separate from editable draft access in GitHub Actions:
+
+- `APP_STORE_CONNECT_API_KEY_P8`, `APP_STORE_CONNECT_API_KEY_ID`, and
+  `APP_STORE_CONNECT_API_ISSUER_ID` are the Developer-role credentials used for
+  binary upload, authentication checks, and the read-only draft audit.
+- `APP_STORE_CONNECT_RELEASE_API_KEY_P8`,
+  `APP_STORE_CONNECT_RELEASE_API_KEY_ID`, and
+  `APP_STORE_CONNECT_RELEASE_API_ISSUER_ID` are a dedicated team API key with
+  the App Manager role. They are used only to edit the draft and select its
+  processed build. Do not copy a Developer-role key into these secrets: Apple
+  will authenticate it but reject the write operations as forbidden.
+
 The manual `Sync App Store Draft` workflow uploads the repository metadata and
 the four English and four Russian screenshots to an existing editable version.
 It requires the exact confirmation value `SYNC`, skips binary upload, and never
 submits or releases the version. `fastlane/Deliverfile` repeats those safe
-defaults so CI never falls back to interactive setup. The API key must have an
-App Store Connect role that can edit metadata and screenshots. Run it with:
+defaults so CI never falls back to interactive setup. The workflow requires the
+dedicated App Manager secrets listed above. Run it with:
 
 ```sh
 gh workflow run app-store-draft-sync.yml \
@@ -138,7 +150,8 @@ gh workflow run app-store-draft-audit.yml \
 ```
 
 To attach an already processed build without changing metadata, submitting for
-review, or releasing the version, use the bounded build-selection workflow:
+review, or releasing the version, use the bounded build-selection workflow. It
+uses the same dedicated App Manager secrets as the draft sync:
 
 ```sh
 gh workflow run app-store-build-select.yml \
